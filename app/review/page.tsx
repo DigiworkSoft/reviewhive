@@ -1,0 +1,90 @@
+'use client';
+
+import { Suspense } from 'react';
+import { useReviewFlow } from '@/components/review/useReviewFlow';
+import { CourseSelector } from '@/components/review/CourseSelector';
+import { StarRating } from '@/components/review/StarRating';
+import { ReviewCards } from '@/components/review/ReviewCards';
+import { InstructionPanel } from '@/components/review/InstructionPanel';
+import { NegativeFeedback } from '@/components/review/NegativeFeedback';
+
+const academyName = process.env.NEXT_PUBLIC_ACADEMY_NAME || 'Academy';
+
+function ReviewFlow() {
+  const flow = useReviewFlow();
+
+  // ── Loading state ──────────────────────────────────────────────────────
+  if (flow.isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        <div className="animate-pulse text-lg text-gray-500">Loading...</div>
+      </div>
+    );
+  }
+
+  // ── Progress indicator ─────────────────────────────────────────────────
+  const stepNumber = flow.currentStep === 'course' ? 1 : flow.currentStep === 'rating' ? 2 : 3;
+  const totalSteps = 3;
+  const showProgress = flow.currentStep !== 'negative' && flow.currentStep !== 'instruction';
+
+  return (
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Header */}
+      <header className="border-b border-blue-100 bg-white/80 px-4 py-4 text-center backdrop-blur-sm">
+        <h1 className="text-xl font-bold text-gray-900">{academyName}</h1>
+        <p className="mt-1 text-sm text-gray-500">We value your feedback!</p>
+      </header>
+
+      {/* Progress Bar */}
+      {showProgress && (
+        <div className="px-4 pt-4">
+          <div className="mx-auto max-w-md">
+            <div className="mb-2 flex justify-between text-xs text-gray-500">
+              <span>Step {stepNumber} of {totalSteps}</span>
+              <span>
+                {flow.currentStep === 'course'
+                  ? 'Select Course'
+                  : flow.currentStep === 'rating'
+                    ? 'Rate Experience'
+                    : 'Your Review'}
+              </span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500"
+                style={{ width: `${(stepNumber / totalSteps) * 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-6">
+        {flow.error && (
+          <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            {flow.error}
+            <button onClick={flow.clearError} className="ml-2 font-medium underline">
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {flow.currentStep === 'course' && <CourseSelector flow={flow} />}
+        {flow.currentStep === 'rating' && <StarRating flow={flow} />}
+        {flow.currentStep === 'generating' && <StarRating flow={flow} />}
+        {flow.currentStep === 'negative' && <NegativeFeedback flow={flow} />}
+        {flow.currentStep === 'reviews' && <ReviewCards flow={flow} />}
+        {flow.currentStep === 'instruction' && <InstructionPanel flow={flow} />}
+      </main>
+    </div>
+  );
+}
+
+export default function ReviewPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <ReviewFlow />
+    </Suspense>
+  );
+}
