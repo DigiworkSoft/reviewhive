@@ -63,11 +63,9 @@ const styles = StyleSheet.create({
 // ── GET handler ────────────────────────────────────────────────────────────
 export async function GET() {
   try {
-    const reviewUrl = process.env.NEXT_PUBLIC_REVIEW_URL || 'https://reviews.youracademy.in/review';
-
-    // Get academy name and tagline from system_config
+    // Get config from database
     const configRows = await sql`
-      SELECT key, value FROM system_config WHERE key IN ('academy_name', 'tagline')
+      SELECT key, value FROM system_config WHERE key IN ('academy_name', 'poster_tagline', 'google_review_url')
     `;
     const config: Record<string, string> = {};
     for (const row of configRows) {
@@ -75,7 +73,8 @@ export async function GET() {
     }
 
     const academyName = config.academy_name || process.env.NEXT_PUBLIC_ACADEMY_NAME || 'Academy';
-    const tagline = config.tagline || 'Share your experience!';
+    const tagline = config.poster_tagline || 'Share your experience!';
+    const reviewUrl = config.google_review_url || process.env.NEXT_PUBLIC_REVIEW_URL || 'https://g.page/review';
 
     // Generate QR code as data URL
     const qrDataUrl = await QRCode.toDataURL(reviewUrl, {

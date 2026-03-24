@@ -18,11 +18,14 @@ export async function GET() {
 }
 
 // ── PUT: Update one config key ─────────────────────────────────────────────
-const ALLOWED_KEYS_PHASE1 = ['google_review_url', 'whatsapp_number'];
+const ALLOWED_KEYS = [
+  'google_review_url', 'whatsapp_number',
+  'academy_name', 'logo_url', 'poster_tagline', 'poster_color', 'ai_enabled',
+];
 
 const updateSchema = z.object({
   key: z.string().min(1),
-  value: z.string().min(1),
+  value: z.string(),
 });
 
 export async function PUT(request: NextRequest) {
@@ -39,23 +42,20 @@ export async function PUT(request: NextRequest) {
 
     const { key, value } = parsed.data;
 
-    if (!ALLOWED_KEYS_PHASE1.includes(key)) {
+    if (!ALLOWED_KEYS.includes(key)) {
       return NextResponse.json(
-        { error: `Key '${key}' is not configurable in Phase 1. Allowed: ${ALLOWED_KEYS_PHASE1.join(', ')}` },
+        { error: `Key '${key}' is not configurable. Allowed: ${ALLOWED_KEYS.join(', ')}` },
         { status: 403 }
       );
     }
 
+    // Upsert: insert if not exists, update if exists
     const result = await sql`
-      UPDATE system_config
-      SET value = ${value}, updated_at = NOW()
-      WHERE key = ${key}
+      INSERT INTO system_config (key, value, updated_at)
+      VALUES (${key}, ${value}, NOW())
+      ON CONFLICT (key) DO UPDATE SET value = ${value}, updated_at = NOW()
       RETURNING key, value
     `;
-
-    if (result.length === 0) {
-      return NextResponse.json({ error: `Config key '${key}' not found` }, { status: 404 });
-    }
 
     return NextResponse.json({ message: 'Config updated', key: result[0].key, value: result[0].value });
   } catch (error) {

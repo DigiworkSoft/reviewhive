@@ -31,7 +31,17 @@ export function useReviewFlow() {
 
   // ── Session ID (created once on mount) ─────────────────────────────────
   useEffect(() => {
-    sessionIdRef.current = crypto.randomUUID();
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      sessionIdRef.current = crypto.randomUUID();
+    } else {
+      // Fallback for non-secure contexts (HTTP on local network)
+      const arr = new Uint8Array(16);
+      crypto.getRandomValues(arr);
+      arr[6] = (arr[6] & 0x0f) | 0x40;
+      arr[8] = (arr[8] & 0x3f) | 0x80;
+      const hex = Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+      sessionIdRef.current = `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+    }
   }, []);
 
   // ── Log event helper ───────────────────────────────────────────────────
@@ -78,7 +88,7 @@ export function useReviewFlow() {
         if (configRes.ok) {
           const config = await configRes.json();
           setWhatsappNumber(config.whatsapp_number || '');
-          setGoogleReviewUrl(config.google_review_url || '');
+          setGoogleReviewUrl(config.review_redirect_url || '');
         }
       } catch (e) {
         console.error('Failed to load initial data:', e);
@@ -159,7 +169,19 @@ export function useReviewFlow() {
   const handleCopyAndOpen = useCallback(
     (reviewText: string, optionNumber: number) => {
       // 1. Synchronous clipboard write — MUST be first, no await before it
-      navigator.clipboard.writeText(reviewText);
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        navigator.clipboard.writeText(reviewText);
+      } else {
+        // Fallback for non-secure contexts (HTTP on local network)
+        const textarea = document.createElement('textarea');
+        textarea.value = reviewText;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
 
       // 2. Immediately advance to instruction panel
       setCurrentStep('instruction');

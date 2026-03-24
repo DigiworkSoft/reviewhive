@@ -12,6 +12,8 @@ export async function GET() {
     for (const row of rows) {
       config[row.key] = row.value;
     }
+    // The redirect URL after copying a review (from env, not DB)
+    config.review_redirect_url = process.env.NEXT_PUBLIC_REVIEW_URL || '';
     return NextResponse.json(config);
   } catch (error) {
     console.error('Review config error:', error);
