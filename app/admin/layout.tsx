@@ -14,10 +14,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <div className="hidden md:flex">
+      <div className="hidden md:flex md:sticky md:top-0 md:h-screen">
         <AdminSidebar />
       </div>
-      <main className="flex-1 overflow-auto pb-16 md:pb-0">{children}</main>
+      <main className="flex-1 min-w-0 pb-16 md:pb-0">{children}</main>
       <AdminBottomNav />
     </div>
   );

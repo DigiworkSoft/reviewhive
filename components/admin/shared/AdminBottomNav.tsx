@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Tag, FileText, Settings, QrCode } from 'lucide-react';
+import { LayoutDashboard, Tag, FileText, Settings, FileBarChart, QrCode } from 'lucide-react';
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/course-tags', label: 'Tags', icon: Tag },
   { href: '/admin/fallback-templates', label: 'Templates', icon: FileText },
+  { href: '/admin/reports', label: 'Reports', icon: FileBarChart },
   { href: '/admin/config', label: 'Config', icon: Settings },
 ];
 

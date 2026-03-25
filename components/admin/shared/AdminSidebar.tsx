@@ -2,13 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Tag, FileText, Settings, QrCode, LogOut } from 'lucide-react';
+import { LayoutDashboard, Tag, FileText, Settings, QrCode, FileBarChart, ClipboardList, LogOut } from 'lucide-react';
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/course-tags', label: 'Course Tags', icon: Tag },
   { href: '/admin/fallback-templates', label: 'Templates', icon: FileText },
+  { href: '/admin/reports', label: 'Reports', icon: FileBarChart },
   { href: '/admin/config', label: 'Configuration', icon: Settings },
+  { href: '/admin/audit-log', label: 'Audit Log', icon: ClipboardList },
 ];
 
 export function AdminSidebar() {
@@ -29,7 +31,7 @@ export function AdminSidebar() {
         <h2 className="text-lg font-bold text-gray-900">ReviewHive</h2>
         <p className="text-xs text-gray-500">Admin Panel</p>
       </div>
-      <nav className="flex-1 space-y-1 px-2 py-3">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-3">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
@@ -47,7 +49,6 @@ export function AdminSidebar() {
             </Link>
           );
         })}
-        {/* QR Poster — direct download link */}
         <a
           href="/api/qr/poster"
           target="_blank"
