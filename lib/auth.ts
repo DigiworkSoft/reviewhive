@@ -1,6 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose';
 import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 const REFRESH_SECRET = new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET!);
@@ -16,7 +15,7 @@ export async function signJwt(payload: { sub: string; email: string }): Promise<
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('30d')
+    .setExpirationTime('1h')
     .sign(JWT_SECRET);
 }
 
@@ -25,12 +24,17 @@ export async function verifyJwt(token: string): Promise<JwtPayload> {
   return payload as unknown as JwtPayload;
 }
 
-export async function signRefreshToken(payload: { sub: string }): Promise<string> {
+export async function signRefreshToken(payload: { sub: string; email: string }): Promise<string> {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('30d')
+    .setExpirationTime('7d')
     .sign(REFRESH_SECRET);
+}
+
+export async function verifyRefreshToken(token: string): Promise<JwtPayload> {
+  const { payload } = await jwtVerify(token, REFRESH_SECRET);
+  return payload as unknown as JwtPayload;
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -41,6 +45,3 @@ export async function comparePassword(password: string, hash: string): Promise<b
   return bcrypt.compare(password, hash);
 }
 
-export function generateRefreshToken(): string {
-  return crypto.randomUUID() + '-' + crypto.randomBytes(32).toString('hex');
-}

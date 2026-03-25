@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod/v4';
 import sql from '@/lib/db';
-import { comparePassword, signJwt, generateRefreshToken, hashPassword } from '@/lib/auth';
+import { comparePassword, signJwt, signRefreshToken } from '@/lib/auth';
 import crypto from 'crypto';
 
 // ── In-memory rate limiting ────────────────────────────────────────────────
@@ -94,24 +94,15 @@ export async function POST(request: NextRequest) {
     const data = parsed.data;
 
     if (data.action === 'logout') {
-      // Clear cookie and refresh token
-      const token = request.cookies.get('session')?.value;
-      if (token) {
-        // Try to null out refresh_token_hash for the user
-        try {
-          const { jwtVerify } = await import('jose');
-          const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
-          const { payload } = await jwtVerify(token, JWT_SECRET);
-          if (payload.sub) {
-            await sql`UPDATE admin_users SET refresh_token_hash = NULL WHERE id = ${payload.sub}`;
-          }
-        } catch {
-          // Token may be invalid — still clear the cookie
-        }
-      }
-
       const response = NextResponse.json({ message: 'Logged out' });
       response.cookies.set('session', '', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 0,
+        path: '/',
+      });
+      response.cookies.set('refresh_token', '', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
@@ -161,15 +152,16 @@ export async function POST(request: NextRequest) {
     // Clear failed login tracking on success
     clearFailedLogins(data.email);
 
-    // Generate JWT
+    // Generate JWT (1 hour)
     const jwt = await signJwt({ sub: user.id, email: user.email });
 
-    // Generate refresh token and store hash
-    const refreshToken = generateRefreshToken();
-    const refreshTokenHash = await hashPassword(refreshToken);
-    await sql`UPDATE admin_users SET refresh_token_hash = ${refreshTokenHash}, last_login_at = NOW() WHERE id = ${user.id}`;
+    // Generate refresh token (7 days)
+    const refreshToken = await signRefreshToken({ sub: user.id, email: user.email });
 
-    // Set httpOnly cookie
+    // Update last login
+    await sql`UPDATE admin_users SET last_login_at = NOW() WHERE id = ${user.id}`;
+
+    // Set httpOnly cookies
     const response = NextResponse.json({
       message: 'Login successful',
       user: { id: user.id, email: user.email },
@@ -179,7 +171,15 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60, // 30 days
+      maxAge: 60 * 60, // 1 hour
+      path: '/',
+    });
+
+    response.cookies.set('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60, // 7 days
       path: '/',
     });
 
