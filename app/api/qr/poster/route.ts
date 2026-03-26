@@ -49,12 +49,18 @@ export async function GET(request: NextRequest) {
     ];
 
     if (logoUrl) {
-      const logoPath = path.join(process.cwd(), 'public', logoUrl);
-      if (fs.existsSync(logoPath)) {
-        const logoBuffer = fs.readFileSync(logoPath);
-        const ext = logoUrl.endsWith('.png') ? 'png' : 'jpeg';
-        const logoDataUrl = `data:image/${ext};base64,${logoBuffer.toString('base64')}`;
-        children.push(React.createElement(Image, { key: 'logo', style: styles.logo, src: logoDataUrl }));
+      // If it's already a data URL (base64 stored in DB), use directly
+      if (logoUrl.startsWith('data:')) {
+        children.push(React.createElement(Image, { key: 'logo', style: styles.logo, src: logoUrl }));
+      } else {
+        // Legacy: local file path
+        const logoPath = path.join(process.cwd(), 'public', logoUrl);
+        if (fs.existsSync(logoPath)) {
+          const logoBuffer = fs.readFileSync(logoPath);
+          const ext = logoUrl.endsWith('.png') ? 'png' : 'jpeg';
+          const logoDataUrl = `data:image/${ext};base64,${logoBuffer.toString('base64')}`;
+          children.push(React.createElement(Image, { key: 'logo', style: styles.logo, src: logoDataUrl }));
+        }
       }
     }
 

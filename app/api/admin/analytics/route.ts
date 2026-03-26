@@ -175,14 +175,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(rows);
     }
 
-    // ── Ratings: distribution of posted reviews by star rating ─────────────
+    // ── Ratings: distribution of all submitted ratings ─────────────────────
     if (type === 'ratings') {
       const days = parseInt(range, 10) || 30;
       const ratingRows = startDate && endDate
         ? await sql`
             SELECT star_rating, COUNT(*)::int AS count
             FROM review_events
-            WHERE event_type = 'post_on_google_clicked' AND star_rating BETWEEN 1 AND 5
+            WHERE event_type = 'rating_submitted' AND star_rating BETWEEN 1 AND 5
               AND created_at >= ${startDate}::timestamptz AND created_at < ${endDate}::timestamptz + INTERVAL '1 day'
             GROUP BY star_rating
             ORDER BY star_rating ASC
@@ -190,7 +190,7 @@ export async function GET(request: NextRequest) {
         : await sql`
             SELECT star_rating, COUNT(*)::int AS count
             FROM review_events
-            WHERE event_type = 'post_on_google_clicked' AND star_rating BETWEEN 1 AND 5
+            WHERE event_type = 'rating_submitted' AND star_rating BETWEEN 1 AND 5
               AND created_at >= NOW() - ${days + ' days'}::interval
             GROUP BY star_rating
             ORDER BY star_rating ASC
@@ -212,13 +212,13 @@ export async function GET(request: NextRequest) {
         ? await sql`
             SELECT COALESCE(ROUND(AVG(star_rating)::numeric, 1), 0) AS avg
             FROM review_events
-            WHERE event_type = 'post_on_google_clicked' AND star_rating BETWEEN 1 AND 5
+            WHERE event_type = 'rating_submitted' AND star_rating BETWEEN 1 AND 5
               AND created_at >= ${startDate}::timestamptz AND created_at < ${endDate}::timestamptz + INTERVAL '1 day'
           `
         : await sql`
             SELECT COALESCE(ROUND(AVG(star_rating)::numeric, 1), 0) AS avg
             FROM review_events
-            WHERE event_type = 'post_on_google_clicked' AND star_rating BETWEEN 1 AND 5
+            WHERE event_type = 'rating_submitted' AND star_rating BETWEEN 1 AND 5
               AND created_at >= NOW() - ${days + ' days'}::interval
           `;
       return NextResponse.json({
@@ -236,12 +236,12 @@ export async function GET(request: NextRequest) {
       const countQuery = courseFilter
         ? await sql`
             SELECT COUNT(DISTINCT session_id)::int AS total FROM review_events
-            WHERE event_type IN ('ai_generated', 'fallback_used')
+            WHERE event_type IN ('ai_generated', 'fallback_used', 'negative_feedback')
               AND course_tag_id = ${courseFilter}
           `
         : await sql`
             SELECT COUNT(DISTINCT session_id)::int AS total FROM review_events
-            WHERE event_type IN ('ai_generated', 'fallback_used')
+            WHERE event_type IN ('ai_generated', 'fallback_used', 'negative_feedback')
           `;
 
       const rows = courseFilter
@@ -250,13 +250,21 @@ export async function GET(request: NextRequest) {
               MAX(re.created_at) AS created_at,
               MAX(ct.name) AS course_name,
               MAX(re.star_rating) AS star_rating,
-              CASE WHEN BOOL_OR(re.event_type = 'ai_generated') THEN 'AI' ELSE 'Fallback Template' END AS review_source,
-              CASE WHEN BOOL_OR(re.event_type = 'post_on_google_clicked') THEN 'Review Posted' ELSE 'Incomplete' END AS status
+              CASE
+                WHEN BOOL_OR(re.event_type = 'ai_generated') THEN 'AI'
+                WHEN BOOL_OR(re.event_type = 'fallback_used') THEN 'Fallback Template'
+                ELSE 'Negative Feedback'
+              END AS review_source,
+              CASE
+                WHEN BOOL_OR(re.event_type = 'post_on_google_clicked') THEN 'Review Posted'
+                WHEN BOOL_OR(re.event_type = 'negative_feedback') THEN 'Redirected to WhatsApp'
+                ELSE 'Incomplete'
+              END AS status
             FROM review_events re
             LEFT JOIN course_tags ct ON re.course_tag_id = ct.id
             WHERE re.session_id IN (
               SELECT DISTINCT session_id FROM review_events
-              WHERE event_type IN ('ai_generated', 'fallback_used')
+              WHERE event_type IN ('ai_generated', 'fallback_used', 'negative_feedback')
                 AND course_tag_id = ${courseFilter}
             )
             GROUP BY re.session_id
@@ -268,13 +276,21 @@ export async function GET(request: NextRequest) {
               MAX(re.created_at) AS created_at,
               MAX(ct.name) AS course_name,
               MAX(re.star_rating) AS star_rating,
-              CASE WHEN BOOL_OR(re.event_type = 'ai_generated') THEN 'AI' ELSE 'Fallback Template' END AS review_source,
-              CASE WHEN BOOL_OR(re.event_type = 'post_on_google_clicked') THEN 'Review Posted' ELSE 'Incomplete' END AS status
+              CASE
+                WHEN BOOL_OR(re.event_type = 'ai_generated') THEN 'AI'
+                WHEN BOOL_OR(re.event_type = 'fallback_used') THEN 'Fallback Template'
+                ELSE 'Negative Feedback'
+              END AS review_source,
+              CASE
+                WHEN BOOL_OR(re.event_type = 'post_on_google_clicked') THEN 'Review Posted'
+                WHEN BOOL_OR(re.event_type = 'negative_feedback') THEN 'Redirected to WhatsApp'
+                ELSE 'Incomplete'
+              END AS status
             FROM review_events re
             LEFT JOIN course_tags ct ON re.course_tag_id = ct.id
             WHERE re.session_id IN (
               SELECT DISTINCT session_id FROM review_events
-              WHERE event_type IN ('ai_generated', 'fallback_used')
+              WHERE event_type IN ('ai_generated', 'fallback_used', 'negative_feedback')
             )
             GROUP BY re.session_id
             ORDER BY MAX(re.created_at) DESC

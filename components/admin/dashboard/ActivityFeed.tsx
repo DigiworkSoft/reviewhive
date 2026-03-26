@@ -6,8 +6,8 @@ interface FeedRow {
   created_at: string;
   course_name: string | null;
   star_rating: number | null;
-  review_source: 'AI' | 'Fallback Template';
-  status: 'Review Posted' | 'Incomplete';
+  review_source: 'AI' | 'Fallback Template' | 'Negative Feedback';
+  status: 'Review Posted' | 'Incomplete' | 'Redirected to WhatsApp';
 }
 
 interface CourseTag {
@@ -63,16 +63,20 @@ export function ActivityFeed({ feedData, page, totalPages, selectedCourse, cours
                   {row.star_rating ? '★'.repeat(row.star_rating) + '☆'.repeat(5 - row.star_rating) : '—'}
                 </td>
                 <td className="px-3 py-2">
-                  {row.review_source === 'AI'
-                    ? <Badge variant="secondary" className="text-xs">AI</Badge>
-                    : <Badge variant="outline" className="text-xs">Fallback Template</Badge>
-                  }
+                  {row.review_source === 'AI' && <Badge variant="secondary" className="text-xs">AI</Badge>}
+                  {row.review_source === 'Fallback Template' && <Badge variant="outline" className="text-xs">Fallback Template</Badge>}
+                  {row.review_source === 'Negative Feedback' && <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-200 border-red-200 text-xs shadow-none">WhatsApp</Badge>}
                 </td>
                 <td className="px-3 py-2">
-                  {row.status === 'Review Posted'
-                    ? <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">Review Posted</span>
-                    : <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">Incomplete</span>
-                  }
+                  {row.status === 'Review Posted' && (
+                    <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">Review Posted</span>
+                  )}
+                  {row.status === 'Incomplete' && (
+                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">Incomplete</span>
+                  )}
+                  {row.status === 'Redirected to WhatsApp' && (
+                    <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">Redirected</span>
+                  )}
                 </td>
               </tr>
             ))}

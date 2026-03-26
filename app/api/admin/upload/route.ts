@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// ── POST: upload file (logo image) ─────────────────────────────────────────
-// Stores to local /public/uploads/ since Supabase Storage may not be configured.
-// If SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set, uploads to Supabase.
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
+import sql from '@/lib/db';
 
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
 
+// ── POST: upload logo as base64 data URL, stored in system_config ──────────
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -27,17 +23,17 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const ext = file.type === 'image/png' ? 'png' : 'jpg';
-    const filename = `logo-${Date.now()}.${ext}`;
+    const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+    const dataUrl = `data:${mimeType};base64,${buffer.toString('base64')}`;
 
-    // Save to public/uploads/
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(path.join(uploadDir, filename), buffer);
+    // Store the base64 data URL directly in system_config
+    await sql`
+      INSERT INTO system_config (key, value, updated_at)
+      VALUES ('logo_url', ${dataUrl}, NOW())
+      ON CONFLICT (key) DO UPDATE SET value = ${dataUrl}, updated_at = NOW()
+    `;
 
-    const url = `/uploads/${filename}`;
-
-    return NextResponse.json({ url, filename });
+    return NextResponse.json({ url: dataUrl });
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

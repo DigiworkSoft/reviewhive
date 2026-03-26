@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const dataUrl = await QRCode.toDataURL(reviewUrl, {
       width: 500,
       margin: 2,
-      color: { dark: '#000000', light: '#00000000' },
+      color: { dark: '#000000', light: '#ffffff' },
     });
     const base64 = dataUrl.replace(/^data:image\/png;base64,/, '');
     const pngBuffer = Buffer.from(base64, 'base64');
