@@ -39,8 +39,19 @@ export function CourseTagForm({ onSubmit, initialValues, onCancel }: Props) {
           className="w-full rounded-lg border px-3 py-2 text-sm" />
         <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description (optional)"
           className="w-full rounded-lg border px-3 py-2 text-sm" />
-        <input type="number" value={displayOrder} onChange={(e) => setDisplayOrder(Number(e.target.value))}
-          placeholder="Display Order" className="w-full rounded-lg border px-3 py-2 text-sm" />
+        <div>
+          <label className="mb-1 block text-xs font-medium text-gray-500">Display Order (lower = shown first)</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={displayOrder}
+            onChange={(e) => {
+              const val = e.target.value.replace(/[^0-9]/g, '');
+              setDisplayOrder(val === '' ? 0 : parseInt(val, 10));
+            }}
+            className="w-full rounded-lg border px-3 py-2 text-sm"
+          />
+        </div>
         <div className="flex gap-2">
           <button
             onClick={() => { if (name.trim()) onSubmit({ name: name.trim(), description: description.trim(), display_order: displayOrder }); }}

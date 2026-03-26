@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
     lines.push('RATING DISTRIBUTION');
     lines.push('Stars,Reviews');
     for (const r of ratings) {
-      lines.push(`${r.star_rating}★,${r.count}`);
+      lines.push(`${r.star_rating} star${r.star_rating > 1 ? 's' : ''},${r.count}`);
     }
     lines.push('');
 
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
     lines.push('COURSE-WISE STAR RATINGS');
     lines.push('Course,Stars,Reviews');
     for (const cr of courseRatings) {
-      lines.push(`"${cr.course}",${cr.star_rating}★,${cr.count}`);
+      lines.push(`"${cr.course}",${cr.star_rating} star${cr.star_rating > 1 ? 's' : ''},${cr.count}`);
     }
     lines.push('');
 
@@ -106,8 +106,13 @@ export async function GET(request: NextRequest) {
     }
 
     const csv = lines.join('\n') + '\n';
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const csvBytes = encoder.encode(csv);
+    const output = new Uint8Array(bom.length + csvBytes.length);
+    output.set(bom, 0);
+    output.set(csvBytes, bom.length);
     const today = new Date().toISOString().split('T')[0];
-    return new NextResponse(encoder.encode(csv), {
+    return new NextResponse(output, {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
         'Content-Disposition': `attachment; filename="reviews-export-${today}.csv"`,
