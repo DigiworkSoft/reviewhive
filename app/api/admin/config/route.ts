@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import sql from '@/lib/db';
 
 // ── GET: Return all system_config as key-value object ──────────────────────
@@ -41,7 +41,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const { key, value } = parsed.data;
-
+    
     if (!ALLOWED_KEYS.includes(key)) {
       return NextResponse.json(
         { error: `Key '${key}' is not configurable. Allowed: ${ALLOWED_KEYS.join(', ')}` },
@@ -49,13 +49,25 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Upsert: insert if not exists, update if exists
+    // 1. Get current value for audit log
+    const currentRows = await sql`SELECT value FROM system_config WHERE key = ${key}`;
+    const oldValue = currentRows.length > 0 ? currentRows[0].value : null;
+
+    // 2. Upsert config
     const result = await sql`
       INSERT INTO system_config (key, value, updated_at)
       VALUES (${key}, ${value}, NOW())
       ON CONFLICT (key) DO UPDATE SET value = ${value}, updated_at = NOW()
       RETURNING key, value
     `;
+
+    // 3. Log the change to audit log
+    if (oldValue !== value) {
+      await sql`
+        INSERT INTO config_audit_log (config_key, old_value, new_value)
+        VALUES (${key}, ${oldValue}, ${value})
+      `;
+    }
 
     return NextResponse.json({ message: 'Config updated', key: result[0].key, value: result[0].value });
   } catch (error) {

@@ -6,14 +6,14 @@ export async function GET() {
   try {
     const rows = await sql`
       SELECT key, value FROM system_config
-      WHERE key IN ('whatsapp_number', 'google_review_url')
+      WHERE key IN ('whatsapp_number', 'google_review_url', 'academy_name')
     `;
     const config: Record<string, string> = {};
     for (const row of rows) {
       config[row.key] = row.value;
     }
-    // The redirect URL after copying a review (from env, not DB)
-    config.review_redirect_url = process.env.NEXT_PUBLIC_REVIEW_URL || '';
+    // Backward compatibility for the field name used in the frontend
+    config.review_redirect_url = config.google_review_url || '';
     return NextResponse.json(config);
   } catch (error) {
     console.error('Review config error:', error);

@@ -19,13 +19,15 @@ export async function GET(request: NextRequest) {
     const config: Record<string, string> = {};
     for (const row of configRows) config[row.key] = row.value;
 
-    const academyName = config.academy_name || process.env.NEXT_PUBLIC_ACADEMY_NAME || 'Academy';
+    const academyName = config.academy_name || 'Academy';
     const tagline = config.poster_tagline || 'Share your experience!';
     const brandColor = config.poster_color || '#1a1a2e';
     const logoUrl = config.logo_url || '';
-    const reviewUrl = config.google_review_url || process.env.NEXT_PUBLIC_REVIEW_URL || 'https://g.page/review';
+    const googleReviewUrl = config.google_review_url || 'https://g.page/review';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const qrTargetUrl = `${siteUrl}/review?src=qr`;
 
-    const qrDataUrl = await QRCode.toDataURL(reviewUrl, {
+    const qrDataUrl = await QRCode.toDataURL(qrTargetUrl, {
       width: 500,
       margin: 2,
       color: { dark: brandColor, light: '#ffffff' },
@@ -71,7 +73,7 @@ export async function GET(request: NextRequest) {
         React.createElement(Image, { style: styles.qrImage, src: qrDataUrl })
       ),
       React.createElement(Text, { key: 'inst', style: styles.instructions }, 'Scan the QR code to leave a review'),
-      React.createElement(Text, { key: 'url', style: styles.url }, reviewUrl),
+      React.createElement(Text, { key: 'url', style: styles.url }, googleReviewUrl),
     );
 
     const pdfDocument = React.createElement(Document, null,

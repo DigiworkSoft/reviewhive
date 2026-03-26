@@ -9,10 +9,11 @@ export async function GET(request: NextRequest) {
     const rows = await sql`
       SELECT value FROM system_config WHERE key = 'google_review_url'
     `;
-    const reviewUrl = rows[0]?.value || process.env.NEXT_PUBLIC_REVIEW_URL || 'https://g.page/review';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const qrTargetUrl = `${siteUrl}/review?src=qr`;
 
     if (format === 'svg') {
-      const svgString = await QRCode.toString(reviewUrl, {
+      const svgString = await QRCode.toString(qrTargetUrl, {
         type: 'svg',
         width: 500,
         margin: 2,
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
     }
 
     // PNG — use toDataURL and strip the data URL prefix
-    const dataUrl = await QRCode.toDataURL(reviewUrl, {
+    const dataUrl = await QRCode.toDataURL(qrTargetUrl, {
       width: 500,
       margin: 2,
       color: { dark: '#000000', light: '#ffffff' },

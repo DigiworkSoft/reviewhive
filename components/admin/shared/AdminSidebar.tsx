@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Tag, FileText, Settings, QrCode, FileBarChart, ClipboardList, LogOut, Key } from 'lucide-react';
+import { LayoutDashboard, Tag, FileText, Settings, QrCode, FileBarChart, ClipboardList, LogOut, User } from 'lucide-react';
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -11,7 +11,7 @@ const navItems = [
   { href: '/admin/reports', label: 'Reports', icon: FileBarChart },
   { href: '/admin/config', label: 'Configuration', icon: Settings },
   { href: '/admin/audit-log', label: 'Audit Log', icon: ClipboardList },
-  { href: '/admin/change-password', label: 'Change Password', icon: Key },
+  { href: '/admin/profile', label: 'Profile', icon: User },
 ];
 
 export function AdminSidebar() {

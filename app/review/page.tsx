@@ -8,7 +8,7 @@ import { ReviewCards } from '@/components/review/ReviewCards';
 import { InstructionPanel } from '@/components/review/InstructionPanel';
 import { NegativeFeedback } from '@/components/review/NegativeFeedback';
 
-const academyName = process.env.NEXT_PUBLIC_ACADEMY_NAME || 'Academy';
+
 
 function ReviewFlow() {
   const flow = useReviewFlow();
@@ -22,16 +22,15 @@ function ReviewFlow() {
     );
   }
 
-  // ── Progress indicator ─────────────────────────────────────────────────
   const stepNumber = flow.currentStep === 'course' ? 1 : flow.currentStep === 'rating' ? 2 : 3;
   const totalSteps = 3;
-  const showProgress = flow.currentStep !== 'negative' && flow.currentStep !== 'instruction';
+  const showProgress = flow.currentStep !== 'negative' && flow.currentStep !== 'instruction' && flow.currentStep !== 'generating';
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
       <header className="border-b border-blue-100 bg-white/80 px-4 py-4 text-center backdrop-blur-sm">
-        <h1 className="text-xl font-bold text-gray-900">{academyName}</h1>
+        <h1 className="text-xl font-bold text-gray-900">{flow.academyName || 'Academy'}</h1>
         <p className="mt-1 text-sm text-gray-500">We value your feedback!</p>
       </header>
 
@@ -72,10 +71,17 @@ function ReviewFlow() {
 
         {flow.currentStep === 'course' && <CourseSelector flow={flow} />}
         {flow.currentStep === 'rating' && <StarRating flow={flow} />}
-        {flow.currentStep === 'generating' && <StarRating flow={flow} />}
+        
+        {flow.currentStep === 'generating' && (
+          <div className="flex flex-1 flex-col items-center justify-center py-12">
+            <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent shadow-sm"></div>
+            <h3 className="text-lg font-bold text-gray-900">AI is writing...</h3>
+            <p className="text-sm text-gray-500">Creating a perfect review for you</p>
+          </div>
+        )}
+
         {flow.currentStep === 'negative' && <NegativeFeedback flow={flow} />}
         {flow.currentStep === 'reviews' && <ReviewCards flow={flow} />}
-        {flow.currentStep === 'instruction' && <InstructionPanel flow={flow} />}
       </main>
     </div>
   );

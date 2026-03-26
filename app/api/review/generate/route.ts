@@ -83,65 +83,43 @@ const generateSchema = z.object({
 });
 
 // ── Gemini AI call ─────────────────────────────────────────────────────────
+// ── Gemini AI call ─────────────────────────────────────────────────────────
 async function generateWithAI(
   academyName: string,
   courseTag: string,
   starRating: number
 ): Promise<string> {
+  console.log(`--- AI Start: ${academyName} (${courseTag}) ---`);
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash',
-    generationConfig: {
-      responseMimeType: 'application/json',
-      temperature: 0.95,
-      topP: 0.95,
-    },
+    model: 'gemini-2.5-flash'
   });
 
-  const persona = pick(PERSONAS);
-  const template = pick(PROMPT_TEMPLATES)(persona);
-  const focuses = pickN(FOCUS_AREAS, 2);
-  const lengthRange = randomLengthRange();
-
-  const prompt = `You are a real student writing a Google review. ${template}
-
-Academy: ${academyName}. Course: ${courseTag}. Rating: ${starRating} stars.
-
-Naturally mention ${focuses[0]} or ${focuses[1]}. Length: ${lengthRange} words.
-
-Rules:
-- First person only, conversational Indian English
-- No marketing language, no bullet points, no emojis
-- Never use "I highly recommend" or "best academy"
-- Vary sentence length — mix short and long sentences
-- Sound natural, like a real student typed it on their phone
-
-Return only a single JSON string (not an array): "your review text here"`;
+  const prompt = `Write a 2-3 sentence Google review for ${academyName} about the course ${courseTag}. 
+Rating: ${starRating} stars.
+Conversational Indian English. No emojis. No jargon. 
+Just the review text, nothing else.`;
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000);
+  const timeout = setTimeout(() => controller.abort(), 12000);
 
   try {
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    });
+    const result = await model.generateContent(prompt);
     clearTimeout(timeout);
 
-    const text = result.response.text();
-    const review = JSON.parse(text);
-
-    if (typeof review !== 'string') {
-      throw new Error('Invalid AI response format — expected a string');
-    }
-
-    return review;
+    const response = await result.response;
+    const text = response.text().trim();
+    console.log('--- AI Success Output: ---');
+    console.log(text);
+    
+    return text.replace(/^"|"$/g, '').replace(/```json|```/g, '').trim();
   } catch (error) {
     clearTimeout(timeout);
+    console.error('--- AI Failed: ---', error);
     throw error;
   }
 }
 
-// ── Fallback templates ─────────────────────────────────────────────────────
 async function getFallbackTemplate(
   courseTagId: string,
   starRating: number
@@ -157,35 +135,23 @@ async function getFallbackTemplate(
       RANDOM()
     LIMIT 1
   `;
-
-  if (rows.length === 0) {
-    return 'I had a great experience at this academy. The teaching quality is excellent and the faculty is very supportive.';
-  }
-
-  return rows[0].template_text;
+  return rows.length > 0 ? rows[0].template_text : 'Great experience at NSG Academy!';
 }
 
-// ── POST handler ───────────────────────────────────────────────────────────
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const parsed = generateSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Invalid request body', details: parsed.error.issues },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
     }
 
     const { course_tag_id, star_rating, session_id, source } = parsed.data;
     const ipHash = getIpHash(request);
 
     if (isRateLimited(ipHash)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded. Maximum 20 AI generation requests per hour.' },
-        { status: 429 }
-      );
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     }
 
     recordRequest(ipHash);
@@ -203,35 +169,11 @@ export async function POST(request: NextRequest) {
       review = await generateWithAI(academyName, courseTag, star_rating);
       reviewSource = 'ai';
     } catch (error) {
-      console.error('AI generation failed, using fallback:', error);
       review = await getFallbackTemplate(course_tag_id, star_rating);
       reviewSource = 'fallback';
     }
 
-    // Log the event
-    const userAgent = request.headers.get('user-agent');
-    const uaCategory = /tablet|ipad/i.test(userAgent || '')
-      ? 'tablet'
-      : /mobile|iphone|android.*mobile/i.test(userAgent || '')
-        ? 'mobile'
-        : 'desktop';
-
-    await sql`
-      INSERT INTO review_events (
-        event_type, course_tag_id, star_rating, ai_used,
-        session_id, ip_hash, user_agent_category, source
-      ) VALUES (
-        ${reviewSource === 'ai' ? 'ai_generated' : 'fallback_used'},
-        ${course_tag_id},
-        ${star_rating},
-        ${reviewSource === 'ai'},
-        ${session_id},
-        ${ipHash},
-        ${uaCategory},
-        ${source ?? 'direct'}
-      )
-    `;
-
+    // Return clean single review format
     return NextResponse.json({ review, source: reviewSource });
   } catch (error) {
     console.error('Generate error:', error);

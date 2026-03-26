@@ -28,6 +28,7 @@ export function useReviewFlow() {
   const [error, setError] = useState<string | null>(null);
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [googleReviewUrl, setGoogleReviewUrl] = useState('');
+  const [academyName, setAcademyName] = useState('');
 
   // ── Session ID (created once on mount) ─────────────────────────────────
   useEffect(() => {
@@ -88,7 +89,14 @@ export function useReviewFlow() {
         if (configRes.ok) {
           const config = await configRes.json();
           setWhatsappNumber(config.whatsapp_number || '');
-          setGoogleReviewUrl(config.review_redirect_url || '');
+          // Append a timestamp to bypass Google Maps app caching of drafts
+          const timestamp = new Date().getTime();
+          const finalUrl = config.review_redirect_url || '';
+          const cacheBustedUrl = finalUrl.includes('?') 
+            ? `${finalUrl}&t=${timestamp}` 
+            : `${finalUrl}?t=${timestamp}`;
+          setGoogleReviewUrl(cacheBustedUrl);
+          setAcademyName(config.academy_name || 'Academy');
         }
       } catch (e) {
         console.error('Failed to load initial data:', e);
@@ -228,6 +236,7 @@ export function useReviewFlow() {
     isLoading,
     error,
     googleReviewUrl,
+    academyName,
     whatsappLink,
     source,
 

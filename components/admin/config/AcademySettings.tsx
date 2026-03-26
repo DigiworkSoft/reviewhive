@@ -72,7 +72,31 @@ export function AcademySettings() {
   return (
     <div className="space-y-4">
       <ConfigField label="Academy Name" configKey="academy_name" value={config.academy_name || ''} savedKey={savedKey} onChange={handleChange} onSave={save} />
-      <ConfigField label="Google Review URL" configKey="google_review_url" value={config.google_review_url || ''} savedKey={savedKey} onChange={handleChange} onSave={save} />
+      
+      {/* Read-only Review Page URL */}
+      <div className="rounded-lg border bg-blue-50/50 p-4 border-blue-100">
+        <label className="mb-1 block text-sm font-semibold text-blue-800 uppercase tracking-wider">Public Review Page (QR Link)</label>
+        <p className="text-xs text-blue-600 mb-2 italic">This is the link your customers scan from the QR code.</p>
+        <div className="flex items-center gap-2">
+            <code className="flex-1 bg-white border border-blue-100 rounded px-3 py-2 text-sm text-gray-700 font-mono">
+                {typeof window !== 'undefined' ? `${window.location.origin}/review` : '.../review'}
+            </code>
+            <button 
+                onClick={() => {
+                    if (typeof window !== 'undefined') {
+                        navigator.clipboard.writeText(`${window.location.origin}/review?src=qr`);
+                        alert('Link copied!');
+                    }
+                }}
+                className="text-xs bg-blue-100 text-blue-700 px-3 py-2 rounded font-medium hover:bg-blue-200"
+            >
+                Copy Link
+            </button>
+        </div>
+      </div>
+
+      <ConfigField label="Final Redirect URL (Google Google Maps/Review Link)" configKey="google_review_url" value={config.google_review_url || ''} savedKey={savedKey} onChange={handleChange} onSave={save} />
+
       <ConfigField label="WhatsApp Number" configKey="whatsapp_number" value={config.whatsapp_number || ''} savedKey={savedKey} onChange={handleChange} onSave={save} />
       <ConfigField label="Poster Tagline" configKey="poster_tagline" value={config.poster_tagline || ''} maxLen={60} savedKey={savedKey} onChange={handleChange} onSave={save} />
 

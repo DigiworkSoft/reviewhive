@@ -36,6 +36,17 @@ yarn-error.log*
 # vercel
 .vercel
 
+# debug scripts
+seed.ts
+check-admins*.ts
+find-db.ts
+inspect-users.ts
+list-tables.ts
+list-dbs.ts
+list-academy-tables.ts
+reset-db.ts
+tmp_*.ts
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

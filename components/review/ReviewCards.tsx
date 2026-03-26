@@ -12,46 +12,70 @@ export function ReviewCards({ flow }: Props) {
 
   if (!flow.review) return null;
 
-  // Show first ~200 characters when collapsed
-  const isLong = flow.review.length > 200;
-  const displayText = !expanded && isLong
-    ? flow.review.slice(0, 200) + '...'
-    : flow.review;
-
   return (
-    <div className="flex flex-1 flex-col">
-      <h2 className="mb-1 text-lg font-semibold text-gray-900">
+    <div className="flex flex-1 flex-col pb-6">
+      <h2 className="mb-1 text-xl font-bold text-gray-900">
         Your review is ready!
       </h2>
-      <p className="mb-4 text-sm text-gray-500">
-        Review the text below, then copy and post it on Google
+      <p className="mb-6 text-sm text-gray-500">
+        Review the text below, then copy and post it on Google.
       </p>
 
-      <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4">
+      <div className="rounded-xl border border-gray-200 bg-gray-50/50 p-4 mb-6">
         {flow.reviewSource === 'fallback' && (
-          <span className="mb-2 inline-block rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
-            Template
+          <span className="mb-2 inline-block rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+            Suggested Template
           </span>
         )}
-        <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
-          {displayText}
+        <p className="text-sm leading-relaxed text-gray-600 whitespace-pre-line">
+          {flow.review}
         </p>
-        {isLong && (
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="mt-2 text-sm font-medium text-blue-600 hover:text-blue-700"
-          >
-            {expanded ? 'Show less' : 'Read more'}
-          </button>
-        )}
       </div>
 
       <button
-        onClick={() => flow.handleCopyAndOpen(flow.review)}
-        className="mt-4 w-full rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98]"
+        onClick={() => {
+          const text = flow.review;
+          const url = flow.googleReviewUrl;
+          
+          // Robust Copy Function
+          const performCopy = (val: string) => {
+              const textArea = document.createElement("textarea");
+              textArea.value = val;
+              textArea.style.position = "fixed";
+              textArea.style.left = "-9999px";
+              textArea.style.top = "0";
+              document.body.appendChild(textArea);
+              textArea.focus();
+              textArea.select();
+              try {
+                  document.execCommand('copy');
+              } catch (err) {
+                  console.error('Copy failed');
+              }
+              document.body.removeChild(textArea);
+          };
+
+          if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text)
+              .catch(() => performCopy(text))
+              .finally(() => {
+                  window.location.href = url;
+              });
+          } else {
+            performCopy(text);
+            window.location.href = url;
+          }
+        }}
+        className="w-full rounded-xl bg-blue-600 px-4 py-4 text-sm font-bold text-white shadow-lg transition-all hover:bg-blue-700 active:scale-95 flex items-center justify-center gap-2"
       >
-        📋 Post Review
+        <span>📋</span> Copy & Post Review
       </button>
+
+      {flow.reviewSource === 'fallback' && (
+        <div className="mt-8 text-center text-[10px] text-gray-400 uppercase tracking-widest">
+            Template loaded from database
+        </div>
+      )}
     </div>
   );
 }
