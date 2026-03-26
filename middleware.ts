@@ -8,7 +8,16 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow access to login page and auth API without authentication
-  if (pathname === '/admin/login' || pathname === '/api/admin/auth') {
+  const publicPaths = [
+    '/admin/login',
+    '/admin/forgot-password',
+    '/admin/reset-password',
+    '/api/admin/auth',
+    '/api/admin/auth/forgot-password',
+    '/api/admin/auth/reset-password'
+  ];
+
+  if (publicPaths.includes(pathname)) {
     return NextResponse.next();
   }
 

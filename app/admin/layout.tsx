@@ -7,8 +7,8 @@ import { AdminBottomNav } from '@/components/admin/shared/AdminBottomNav';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // Don't wrap login page with sidebar/nav
-  if (pathname === '/admin/login') {
+  // Don't wrap login or password recovery pages with sidebar/nav
+  if (['/admin/login', '/admin/forgot-password', '/admin/reset-password'].includes(pathname)) {
     return <>{children}</>;
   }
 
