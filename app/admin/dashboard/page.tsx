@@ -29,7 +29,7 @@ export default function DashboardPage() {
   const fetchAll = useCallback(async () => {
     const q = `range=${range}`;
     const [kpiR, prevR, trendR, weeklyR, coursesR, ratingsR, feedR, tagsR] = await Promise.all([
-      fetch(`/api/admin/analytics?type=kpi`).then(r => r.json()),
+      fetch(`/api/admin/analytics?type=kpi&${q}`).then(r => r.json()),
       fetch(`/api/admin/analytics?type=kpi_prev`).then(r => r.json()),
       fetch(`/api/admin/analytics?type=trend&${q}`).then(r => r.json()),
       fetch(`/api/admin/analytics?type=weekly`).then(r => r.json()),
@@ -48,11 +48,11 @@ export default function DashboardPage() {
   // Auto-poll KPI every 60 seconds
   useEffect(() => {
     const interval = setInterval(async () => {
-      const r = await fetch('/api/admin/analytics?type=kpi');
+      const r = await fetch(`/api/admin/analytics?type=kpi&range=${range}`);
       if (r.ok) setKpi(await r.json());
     }, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [range]);
 
   const handleSort = (col: string) => {
     const dir = sortCol === col && sortDir === 'desc' ? 'asc' : 'desc';

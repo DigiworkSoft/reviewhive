@@ -73,6 +73,20 @@ export async function GET(request: NextRequest) {
         AND created_at >= ${startDate}::date AND created_at < (${startDate}::date + INTERVAL '1 month')
     `;
 
+    // Course-wise star ratings
+    const courseRatings = await sql`
+      SELECT ct.name AS course,
+        COUNT(*) FILTER (WHERE re.star_rating = 1)::int AS s1,
+        COUNT(*) FILTER (WHERE re.star_rating = 2)::int AS s2,
+        COUNT(*) FILTER (WHERE re.star_rating = 3)::int AS s3,
+        COUNT(*) FILTER (WHERE re.star_rating = 4)::int AS s4,
+        COUNT(*) FILTER (WHERE re.star_rating = 5)::int AS s5
+      FROM review_events re JOIN course_tags ct ON re.course_tag_id = ct.id
+      WHERE re.event_type = 'post_on_google_clicked' AND re.star_rating BETWEEN 1 AND 5
+        AND re.created_at >= ${startDate}::date AND re.created_at < (${startDate}::date + INTERVAL '1 month')
+      GROUP BY ct.id, ct.name ORDER BY ct.name
+    `;
+
     const monthLabel = new Date(`${month}-15`).toLocaleString('en-US', { month: 'long', year: 'numeric' });
 
     const doc = React.createElement(Document, null,
@@ -136,6 +150,29 @@ export async function GET(request: NextRequest) {
           React.createElement(View, { style: { ...s.tableRow, backgroundColor: '#fef3c7' } },
             React.createElement(Text, { style: { width: '50%', fontSize: 10, ...s.bold } }, 'Negative (routed to WhatsApp)'),
             React.createElement(Text, { style: { width: '50%', fontSize: 10, textAlign: 'right', ...s.bold } }, String(negRows[0].count)),
+          ),
+        ),
+
+        // Course-wise Star Ratings
+        React.createElement(View, { style: s.section },
+          React.createElement(Text, { style: s.sectionTitle }, 'Course-wise Star Ratings'),
+          React.createElement(View, { style: s.tableHeader },
+            React.createElement(Text, { style: { width: '35%', fontSize: 9, ...s.bold } }, 'Course'),
+            React.createElement(Text, { style: { width: '13%', fontSize: 9, textAlign: 'center', ...s.bold } }, '1★'),
+            React.createElement(Text, { style: { width: '13%', fontSize: 9, textAlign: 'center', ...s.bold } }, '2★'),
+            React.createElement(Text, { style: { width: '13%', fontSize: 9, textAlign: 'center', ...s.bold } }, '3★'),
+            React.createElement(Text, { style: { width: '13%', fontSize: 9, textAlign: 'center', ...s.bold } }, '4★'),
+            React.createElement(Text, { style: { width: '13%', fontSize: 9, textAlign: 'center', ...s.bold } }, '5★'),
+          ),
+          ...courseRatings.map((cr, i) =>
+            React.createElement(View, { key: i, style: s.tableRow },
+              React.createElement(Text, { style: { width: '35%', fontSize: 9 } }, cr.course),
+              React.createElement(Text, { style: { width: '13%', fontSize: 9, textAlign: 'center' } }, String(cr.s1)),
+              React.createElement(Text, { style: { width: '13%', fontSize: 9, textAlign: 'center' } }, String(cr.s2)),
+              React.createElement(Text, { style: { width: '13%', fontSize: 9, textAlign: 'center' } }, String(cr.s3)),
+              React.createElement(Text, { style: { width: '13%', fontSize: 9, textAlign: 'center' } }, String(cr.s4)),
+              React.createElement(Text, { style: { width: '13%', fontSize: 9, textAlign: 'center' } }, String(cr.s5)),
+            )
           ),
         ),
 

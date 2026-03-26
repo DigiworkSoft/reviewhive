@@ -10,49 +10,104 @@ export async function GET(request: NextRequest) {
     }
 
     const encoder = new TextEncoder();
-    const header = 'Date (IST),Time (IST),Event Type,Course,Star Rating,AI Used,Option Selected,Source\n';
+    const lines: string[] = [];
 
-    const stream = new ReadableStream({
-      async start(controller) {
-        controller.enqueue(encoder.encode(header));
-        const batchSize = 500;
-        let offset = 0;
-        let hasMore = true;
+    // ── Section 1: Overall KPIs ─────────────────────────────────────────
+    const kpiRows = await sql`
+      SELECT
+        COUNT(*) FILTER (WHERE event_type = 'scan')::int AS total_scans,
+        COUNT(*) FILTER (WHERE event_type = 'post_on_google_clicked')::int AS reviews_posted,
+        ROUND(COUNT(*) FILTER (WHERE event_type = 'post_on_google_clicked') * 100.0
+          / NULLIF(COUNT(*) FILTER (WHERE event_type = 'scan'), 0), 1) AS conversion_rate,
+        COALESCE(ROUND(AVG(star_rating) FILTER (WHERE event_type = 'post_on_google_clicked' AND star_rating IS NOT NULL)::numeric, 1), 0) AS avg_rating,
+        COUNT(*) FILTER (WHERE event_type = 'negative_feedback')::int AS negative_feedback
+      FROM review_events
+      WHERE created_at >= ${from}::date AND created_at < (${to}::date + INTERVAL '1 day')
+    `;
+    const k = kpiRows[0];
 
-        while (hasMore) {
-          const rows = await sql`
-            SELECT
-              TO_CHAR(re.created_at AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD') AS date,
-              TO_CHAR(re.created_at AT TIME ZONE 'Asia/Kolkata', 'HH24:MI:SS') AS time,
-              re.event_type,
-              COALESCE(ct.name, '') AS course,
-              COALESCE(re.star_rating::text, '') AS star_rating,
-              CASE WHEN re.ai_used = true THEN 'Yes' WHEN re.ai_used = false THEN 'No' ELSE '' END AS ai_used,
-              COALESCE(re.option_number_selected::text, '') AS option_selected,
-              COALESCE(re.source, 'direct') AS source
-            FROM review_events re
-            LEFT JOIN course_tags ct ON re.course_tag_id = ct.id
-            WHERE re.created_at >= ${from}::date
-              AND re.created_at < (${to}::date + INTERVAL '1 day')
-            ORDER BY re.created_at ASC
-            LIMIT ${batchSize} OFFSET ${offset}
-          `;
+    lines.push('OVERALL SUMMARY');
+    lines.push('Metric,Value');
+    lines.push(`Total QR Scans,${k.total_scans}`);
+    lines.push(`Reviews Posted,${k.reviews_posted}`);
+    lines.push(`Conversion Rate,${k.conversion_rate ?? 0}%`);
+    lines.push(`Average Star Rating,${k.avg_rating}`);
+    lines.push(`Negative Feedback,${k.negative_feedback}`);
+    lines.push('');
 
-          for (const row of rows) {
-            const line = `${row.date},${row.time},${row.event_type},"${row.course}",${row.star_rating},${row.ai_used},${row.option_selected},${row.source}\n`;
-            controller.enqueue(encoder.encode(line));
-          }
+    // ── Section 2: Course Breakdown ─────────────────────────────────────
+    const courses = await sql`
+      SELECT ct.name,
+        COUNT(*) FILTER (WHERE re.event_type = 'course_selected')::int AS scans,
+        COUNT(*) FILTER (WHERE re.event_type = 'post_on_google_clicked')::int AS reviews,
+        ROUND(COUNT(*) FILTER (WHERE re.event_type = 'post_on_google_clicked') * 100.0
+          / NULLIF(COUNT(*) FILTER (WHERE re.event_type = 'course_selected'), 0), 1) AS conversion_rate,
+        COALESCE(ROUND(AVG(re.star_rating) FILTER (WHERE re.event_type = 'post_on_google_clicked' AND re.star_rating IS NOT NULL)::numeric, 1), 0) AS avg_rating
+      FROM review_events re JOIN course_tags ct ON re.course_tag_id = ct.id
+      WHERE re.created_at >= ${from}::date AND re.created_at < (${to}::date + INTERVAL '1 day')
+      GROUP BY ct.id, ct.name ORDER BY reviews DESC
+    `;
 
-          offset += batchSize;
-          hasMore = rows.length === batchSize;
-        }
+    lines.push('COURSE BREAKDOWN');
+    lines.push('Course,Scans,Reviews,Conversion Rate,Avg Rating');
+    for (const c of courses) {
+      lines.push(`"${c.name}",${c.scans},${c.reviews},${c.conversion_rate ?? 0}%,${c.avg_rating}`);
+    }
+    lines.push('');
 
-        controller.close();
-      },
-    });
+    // ── Section 3: Rating Distribution ──────────────────────────────────
+    const ratings = await sql`
+      SELECT star_rating, COUNT(*)::int AS count
+      FROM review_events
+      WHERE event_type = 'post_on_google_clicked' AND star_rating BETWEEN 1 AND 5
+        AND created_at >= ${from}::date AND created_at < (${to}::date + INTERVAL '1 day')
+      GROUP BY star_rating ORDER BY star_rating
+    `;
 
+    lines.push('RATING DISTRIBUTION');
+    lines.push('Stars,Reviews');
+    for (const r of ratings) {
+      lines.push(`${r.star_rating}★,${r.count}`);
+    }
+    lines.push('');
+
+    // ── Section 4: Course-wise Star Rating ──────────────────────────────
+    const courseRatings = await sql`
+      SELECT ct.name AS course, re.star_rating, COUNT(*)::int AS count
+      FROM review_events re JOIN course_tags ct ON re.course_tag_id = ct.id
+      WHERE re.event_type = 'post_on_google_clicked' AND re.star_rating BETWEEN 1 AND 5
+        AND re.created_at >= ${from}::date AND re.created_at < (${to}::date + INTERVAL '1 day')
+      GROUP BY ct.name, re.star_rating ORDER BY ct.name, re.star_rating
+    `;
+
+    lines.push('COURSE-WISE STAR RATINGS');
+    lines.push('Course,Stars,Reviews');
+    for (const cr of courseRatings) {
+      lines.push(`"${cr.course}",${cr.star_rating}★,${cr.count}`);
+    }
+    lines.push('');
+
+    // ── Section 5: Daily Trend ──────────────────────────────────────────
+    const daily = await sql`
+      SELECT
+        TO_CHAR(created_at AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD') AS date,
+        COUNT(*) FILTER (WHERE event_type = 'scan')::int AS scans,
+        COUNT(*) FILTER (WHERE event_type = 'post_on_google_clicked')::int AS reviews
+      FROM review_events
+      WHERE created_at >= ${from}::date AND created_at < (${to}::date + INTERVAL '1 day')
+      GROUP BY TO_CHAR(created_at AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD')
+      ORDER BY date
+    `;
+
+    lines.push('DAILY TREND');
+    lines.push('Date,Scans,Reviews');
+    for (const d of daily) {
+      lines.push(`${d.date},${d.scans},${d.reviews}`);
+    }
+
+    const csv = lines.join('\n') + '\n';
     const today = new Date().toISOString().split('T')[0];
-    return new NextResponse(stream, {
+    return new NextResponse(encoder.encode(csv), {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
         'Content-Disposition': `attachment; filename="reviews-export-${today}.csv"`,

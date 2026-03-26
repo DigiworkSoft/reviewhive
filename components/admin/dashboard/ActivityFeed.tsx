@@ -4,10 +4,10 @@ import { Badge } from '@/components/ui/badge';
 
 interface FeedRow {
   created_at: string;
-  event_type: string;
   course_name: string | null;
   star_rating: number | null;
-  ai_used: boolean | null;
+  review_source: 'AI' | 'Fallback Template';
+  status: 'Review Posted' | 'Incomplete';
 }
 
 interface CourseTag {
@@ -48,7 +48,8 @@ export function ActivityFeed({ feedData, page, totalPages, selectedCourse, cours
               <th className="px-3 py-2">Date / Time</th>
               <th className="px-3 py-2">Course</th>
               <th className="px-3 py-2">Rating</th>
-              <th className="px-3 py-2">Source</th>
+              <th className="px-3 py-2">Review Source</th>
+              <th className="px-3 py-2">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -62,14 +63,21 @@ export function ActivityFeed({ feedData, page, totalPages, selectedCourse, cours
                   {row.star_rating ? '★'.repeat(row.star_rating) + '☆'.repeat(5 - row.star_rating) : '—'}
                 </td>
                 <td className="px-3 py-2">
-                  {row.ai_used === true && <Badge variant="secondary" className="text-xs">AI</Badge>}
-                  {row.ai_used === false && <Badge variant="outline" className="text-xs">Fallback</Badge>}
-                  {row.ai_used === null && <span className="text-gray-400">—</span>}
+                  {row.review_source === 'AI'
+                    ? <Badge variant="secondary" className="text-xs">AI</Badge>
+                    : <Badge variant="outline" className="text-xs">Fallback Template</Badge>
+                  }
+                </td>
+                <td className="px-3 py-2">
+                  {row.status === 'Review Posted'
+                    ? <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">Review Posted</span>
+                    : <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">Incomplete</span>
+                  }
                 </td>
               </tr>
             ))}
             {feedData.length === 0 && (
-              <tr><td colSpan={4} className="px-3 py-6 text-center text-gray-400">No events</td></tr>
+              <tr><td colSpan={5} className="px-3 py-6 text-center text-gray-400">No events</td></tr>
             )}
           </tbody>
         </table>

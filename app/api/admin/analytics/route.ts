@@ -19,16 +19,38 @@ export async function GET(request: NextRequest) {
 
     // ── KPI ─────────────────────────────────────────────────────────────
     if (type === 'kpi') {
-      const scansResult = await sql`
-        SELECT COUNT(*)::int AS count FROM review_events WHERE event_type = 'scan'
-      `;
-      const reviewsResult = await sql`
-        SELECT COUNT(*)::int AS count FROM review_events WHERE event_type = 'post_on_google_clicked'
-      `;
-      const avgResult = await sql`
-        SELECT COALESCE(ROUND(AVG(star_rating)::numeric, 1), 0) AS avg
-        FROM review_events WHERE event_type = 'rating_submitted' AND star_rating IN (4, 5)
-      `;
+      const days = parseInt(range, 10) || 30;
+      const scansResult = startDate && endDate
+        ? await sql`
+            SELECT COUNT(*)::int AS count FROM review_events
+            WHERE event_type = 'scan'
+              AND created_at >= ${startDate}::timestamptz AND created_at < ${endDate}::timestamptz + INTERVAL '1 day'
+          `
+        : await sql`
+            SELECT COUNT(*)::int AS count FROM review_events
+            WHERE event_type = 'scan' AND created_at >= NOW() - ${days + ' days'}::interval
+          `;
+      const reviewsResult = startDate && endDate
+        ? await sql`
+            SELECT COUNT(*)::int AS count FROM review_events
+            WHERE event_type = 'post_on_google_clicked'
+              AND created_at >= ${startDate}::timestamptz AND created_at < ${endDate}::timestamptz + INTERVAL '1 day'
+          `
+        : await sql`
+            SELECT COUNT(*)::int AS count FROM review_events
+            WHERE event_type = 'post_on_google_clicked' AND created_at >= NOW() - ${days + ' days'}::interval
+          `;
+      const avgResult = startDate && endDate
+        ? await sql`
+            SELECT COALESCE(ROUND(AVG(star_rating)::numeric, 1), 0) AS avg
+            FROM review_events WHERE event_type = 'post_on_google_clicked' AND star_rating IN (4, 5)
+              AND created_at >= ${startDate}::timestamptz AND created_at < ${endDate}::timestamptz + INTERVAL '1 day'
+          `
+        : await sql`
+            SELECT COALESCE(ROUND(AVG(star_rating)::numeric, 1), 0) AS avg
+            FROM review_events WHERE event_type = 'post_on_google_clicked' AND star_rating IN (4, 5)
+              AND created_at >= NOW() - ${days + ' days'}::interval
+          `;
       const totalScans = scansResult[0].count;
       const totalReviews = reviewsResult[0].count;
       const avgRating = Number(avgResult[0].avg);
@@ -206,48 +228,56 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // ── Feed: paginated activity feed ────────────────────────────────────
+    // ── Feed: paginated activity feed (session-based) ─────────────────────
     if (type === 'feed') {
       const limit = 50;
       const offset = (page - 1) * limit;
 
       const countQuery = courseFilter
         ? await sql`
-            SELECT COUNT(*)::int AS total FROM review_events
-            WHERE event_type IN ('ai_generated', 'fallback_used', 'post_on_google_clicked', 'negative_feedback')
+            SELECT COUNT(DISTINCT session_id)::int AS total FROM review_events
+            WHERE event_type IN ('ai_generated', 'fallback_used')
               AND course_tag_id = ${courseFilter}
           `
         : await sql`
-            SELECT COUNT(*)::int AS total FROM review_events
-            WHERE event_type IN ('ai_generated', 'fallback_used', 'post_on_google_clicked', 'negative_feedback')
+            SELECT COUNT(DISTINCT session_id)::int AS total FROM review_events
+            WHERE event_type IN ('ai_generated', 'fallback_used')
           `;
 
       const rows = courseFilter
         ? await sql`
             SELECT
-              re.created_at,
-              re.event_type,
-              ct.name AS course_name,
-              re.star_rating,
-              re.ai_used
+              MAX(re.created_at) AS created_at,
+              MAX(ct.name) AS course_name,
+              MAX(re.star_rating) AS star_rating,
+              CASE WHEN BOOL_OR(re.event_type = 'ai_generated') THEN 'AI' ELSE 'Fallback Template' END AS review_source,
+              CASE WHEN BOOL_OR(re.event_type = 'post_on_google_clicked') THEN 'Review Posted' ELSE 'Incomplete' END AS status
             FROM review_events re
             LEFT JOIN course_tags ct ON re.course_tag_id = ct.id
-            WHERE re.event_type IN ('ai_generated', 'fallback_used', 'post_on_google_clicked', 'negative_feedback')
-              AND re.course_tag_id = ${courseFilter}
-            ORDER BY re.created_at DESC
+            WHERE re.session_id IN (
+              SELECT DISTINCT session_id FROM review_events
+              WHERE event_type IN ('ai_generated', 'fallback_used')
+                AND course_tag_id = ${courseFilter}
+            )
+            GROUP BY re.session_id
+            ORDER BY MAX(re.created_at) DESC
             LIMIT ${limit} OFFSET ${offset}
           `
         : await sql`
             SELECT
-              re.created_at,
-              re.event_type,
-              ct.name AS course_name,
-              re.star_rating,
-              re.ai_used
+              MAX(re.created_at) AS created_at,
+              MAX(ct.name) AS course_name,
+              MAX(re.star_rating) AS star_rating,
+              CASE WHEN BOOL_OR(re.event_type = 'ai_generated') THEN 'AI' ELSE 'Fallback Template' END AS review_source,
+              CASE WHEN BOOL_OR(re.event_type = 'post_on_google_clicked') THEN 'Review Posted' ELSE 'Incomplete' END AS status
             FROM review_events re
             LEFT JOIN course_tags ct ON re.course_tag_id = ct.id
-            WHERE re.event_type IN ('ai_generated', 'fallback_used', 'post_on_google_clicked', 'negative_feedback')
-            ORDER BY re.created_at DESC
+            WHERE re.session_id IN (
+              SELECT DISTINCT session_id FROM review_events
+              WHERE event_type IN ('ai_generated', 'fallback_used')
+            )
+            GROUP BY re.session_id
+            ORDER BY MAX(re.created_at) DESC
             LIMIT ${limit} OFFSET ${offset}
           `;
 
