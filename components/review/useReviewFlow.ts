@@ -22,7 +22,7 @@ export function useReviewFlow() {
   const [courseTags, setCourseTags] = useState<CourseTag[]>([]);
   const [selectedCourse, setSelectedCourseState] = useState<CourseTag | null>(null);
   const [selectedRating, setSelectedRating] = useState(0);
-  const [reviews, setReviews] = useState<string[]>([]);
+  const [review, setReview] = useState('');
   const [reviewSource, setReviewSource] = useState<'ai' | 'fallback'>('ai');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -154,7 +154,7 @@ export function useReviewFlow() {
         }
 
         const data = await res.json();
-        setReviews(data.reviews);
+        setReview(data.review);
         setReviewSource(data.source);
         setCurrentStep('reviews');
       } catch {
@@ -167,7 +167,7 @@ export function useReviewFlow() {
 
   // ── handleCopyAndOpen — MUST be synchronous (iOS Safari) ───────────────
   const handleCopyAndOpen = useCallback(
-    (reviewText: string, optionNumber: number) => {
+    (reviewText: string) => {
       // 1. Synchronous clipboard write — MUST be first, no await before it
       if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
         navigator.clipboard.writeText(reviewText);
@@ -186,11 +186,10 @@ export function useReviewFlow() {
       // 2. Immediately advance to instruction panel
       setCurrentStep('instruction');
 
-      // 3. Log events (fire-and-forget — these are async but we don't await)
+      // 3. Log events (fire-and-forget)
       logEvent('option_selected', {
         course_tag_id: selectedCourse?.id,
         star_rating: selectedRating,
-        option_number_selected: optionNumber,
         ai_used: reviewSource === 'ai',
       });
       logEvent('post_on_google_clicked', {
@@ -224,7 +223,7 @@ export function useReviewFlow() {
     courseTags,
     selectedCourse,
     selectedRating,
-    reviews,
+    review,
     reviewSource,
     isLoading,
     error,

@@ -6,7 +6,7 @@ import crypto from 'crypto';
 
 // ── In-memory rate limiting: 20 requests per IP per hour ───────────────────
 const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
-const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 20;
 
 function getIpHash(request: NextRequest): string {
@@ -36,6 +36,44 @@ function recordRequest(ipHash: string): void {
   }
 }
 
+// ── Randomization pools ────────────────────────────────────────────────────
+const PERSONAS = [
+  'a first-year student who just joined',
+  'a final-year student about to graduate',
+  'a student who switched from another academy',
+  'a student preparing for competitive exams',
+  'a student who attended the summer crash course',
+  'a recent graduate reflecting on their experience',
+];
+
+const PROMPT_TEMPLATES = [
+  (persona: string) => `Write as ${persona}. Use an enthusiastic and heartfelt tone.`,
+  (persona: string) => `Write as ${persona}. Focus on specific aspects like teaching quality, study materials, or campus environment.`,
+  (persona: string) => `Write as ${persona}. Tell a brief story about a specific moment or experience at the academy.`,
+  (persona: string) => `Write as ${persona}. Write casually, like you're telling a friend why they should join.`,
+  (persona: string) => `Write as ${persona}. Express gratitude and mention how the academy helped you grow or achieve a goal.`,
+];
+
+const FOCUS_AREAS = [
+  'teaching quality', 'study materials', 'campus environment',
+  'placement support', 'peer learning', 'personal growth',
+];
+
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function pickN<T>(arr: T[], n: number): T[] {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}
+
+function randomLengthRange(): string {
+  const min = 30 + Math.floor(Math.random() * 15); // 30-44
+  const max = min + 10 + Math.floor(Math.random() * 10); // +10-19, so max is 40-63
+  return `${min}–${Math.min(max, 60)}`;
+}
+
 // ── Schema ─────────────────────────────────────────────────────────────────
 const generateSchema = z.object({
   course_tag_id: z.string().uuid(),
@@ -44,19 +82,41 @@ const generateSchema = z.object({
   source: z.string().optional(),
 });
 
-// ── Gemini AI call with timeout ────────────────────────────────────────────
+// ── Gemini AI call ─────────────────────────────────────────────────────────
 async function generateWithAI(
   academyName: string,
   courseTag: string,
   starRating: number
-): Promise<string[]> {
+): Promise<string> {
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
   const model = genAI.getGenerativeModel({
     model: 'gemini-2.5-flash',
-    generationConfig: { responseMimeType: 'application/json' },
+    generationConfig: {
+      responseMimeType: 'application/json',
+      temperature: 0.95,
+      topP: 0.95,
+    },
   });
 
-  const prompt = `You are a helpful assistant. Generate exactly 3 distinct, genuine-sounding, first-person Google reviews for a coaching academy. Each review must be 60–120 words. Tone 1: enthusiastic and detailed. Tone 2: professional and measured. Tone 3: concise and warm. Return only a valid JSON array: ["review1", "review2", "review3"]. No text outside the JSON.\n\nAcademy: ${academyName}. Course: ${courseTag}. Rating: ${starRating} stars. Generate 3 reviews.`;
+  const persona = pick(PERSONAS);
+  const template = pick(PROMPT_TEMPLATES)(persona);
+  const focuses = pickN(FOCUS_AREAS, 2);
+  const lengthRange = randomLengthRange();
+
+  const prompt = `You are a real student writing a Google review. ${template}
+
+Academy: ${academyName}. Course: ${courseTag}. Rating: ${starRating} stars.
+
+Naturally mention ${focuses[0]} or ${focuses[1]}. Length: ${lengthRange} words.
+
+Rules:
+- First person only, conversational Indian English
+- No marketing language, no bullet points, no emojis
+- Never use "I highly recommend" or "best academy"
+- Vary sentence length — mix short and long sentences
+- Sound natural, like a real student typed it on their phone
+
+Return only a single JSON string (not an array): "your review text here"`;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);
@@ -68,13 +128,13 @@ async function generateWithAI(
     clearTimeout(timeout);
 
     const text = result.response.text();
-    const reviews = JSON.parse(text);
+    const review = JSON.parse(text);
 
-    if (!Array.isArray(reviews) || reviews.length !== 3) {
-      throw new Error('Invalid AI response format');
+    if (typeof review !== 'string') {
+      throw new Error('Invalid AI response format — expected a string');
     }
 
-    return reviews;
+    return review;
   } catch (error) {
     clearTimeout(timeout);
     throw error;
@@ -82,10 +142,10 @@ async function generateWithAI(
 }
 
 // ── Fallback templates ─────────────────────────────────────────────────────
-async function getFallbackTemplates(
+async function getFallbackTemplate(
   courseTagId: string,
   starRating: number
-): Promise<string[]> {
+): Promise<string> {
   const rows = await sql`
     SELECT template_text
     FROM fallback_templates
@@ -94,19 +154,15 @@ async function getFallbackTemplates(
       AND is_active = true
     ORDER BY
       CASE WHEN course_tag_id IS NOT NULL THEN 0 ELSE 1 END,
-      option_number ASC
-    LIMIT 3
+      RANDOM()
+    LIMIT 1
   `;
 
   if (rows.length === 0) {
-    return [
-      'I had a great experience at this academy. The teaching quality is excellent.',
-      'Very good coaching institute with knowledgeable faculty and supportive environment.',
-      'Highly recommend this academy for quality education and personal attention.',
-    ];
+    return 'I had a great experience at this academy. The teaching quality is excellent and the faculty is very supportive.';
   }
 
-  return rows.map((r) => r.template_text);
+  return rows[0].template_text;
 }
 
 // ── POST handler ───────────────────────────────────────────────────────────
@@ -125,7 +181,6 @@ export async function POST(request: NextRequest) {
     const { course_tag_id, star_rating, session_id, source } = parsed.data;
     const ipHash = getIpHash(request);
 
-    // Rate limit check
     if (isRateLimited(ipHash)) {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Maximum 20 AI generation requests per hour.' },
@@ -135,23 +190,21 @@ export async function POST(request: NextRequest) {
 
     recordRequest(ipHash);
 
-    // Get academy name from config
     const configRows = await sql`SELECT value FROM system_config WHERE key = 'academy_name'`;
     const academyName = configRows.length > 0 ? configRows[0].value : 'Our Academy';
 
-    // Get course tag name
     const courseRows = await sql`SELECT name FROM course_tags WHERE id = ${course_tag_id}`;
     const courseTag = courseRows.length > 0 ? courseRows[0].name : 'General';
 
-    let reviews: string[];
+    let review: string;
     let reviewSource: 'ai' | 'fallback';
 
     try {
-      reviews = await generateWithAI(academyName, courseTag, star_rating);
+      review = await generateWithAI(academyName, courseTag, star_rating);
       reviewSource = 'ai';
     } catch (error) {
       console.error('AI generation failed, using fallback:', error);
-      reviews = await getFallbackTemplates(course_tag_id, star_rating);
+      review = await getFallbackTemplate(course_tag_id, star_rating);
       reviewSource = 'fallback';
     }
 
@@ -179,7 +232,7 @@ export async function POST(request: NextRequest) {
       )
     `;
 
-    return NextResponse.json({ reviews, source: reviewSource });
+    return NextResponse.json({ review, source: reviewSource });
   } catch (error) {
     console.error('Generate error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
