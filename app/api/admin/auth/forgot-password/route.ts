@@ -32,7 +32,15 @@ export async function POST(request: NextRequest) {
     `;
 
     // 4. Send Email
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    // Smart Base URL Detection for Vercel vs Local
+    let baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (!baseUrl || baseUrl.includes('localhost') || baseUrl.includes('192.168')) {
+      // Fallback to Vercel System Variable if available
+      baseUrl = process.env.VERCEL_URL 
+        ? `https://${process.env.VERCEL_URL}` 
+        : 'http://localhost:3000';
+    }
+
     const resetLink = `${baseUrl}/admin/reset-password?token=${token}`;
     console.log(`🔗 RESET LINK GENERATED: ${resetLink}`);
 

@@ -20,9 +20,12 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendWeeklyDigest(stats: WeeklyStats, toEmail: string) {
-  const dashboardUrl = process.env.NEXT_PUBLIC_SITE_URL
-    ? `${process.env.NEXT_PUBLIC_SITE_URL}/admin/dashboard`
-    : 'http://localhost:3000/admin/dashboard';
+  // Smart Base URL Detection for Vercel vs Local
+  let baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (!baseUrl || baseUrl.includes('localhost') || baseUrl.includes('192.168')) {
+    baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
+  }
+  const dashboardUrl = `${baseUrl}/admin/dashboard`;
 
   const html = `
 <!DOCTYPE html>

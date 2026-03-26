@@ -24,7 +24,13 @@ export async function GET(request: NextRequest) {
     const brandColor = config.poster_color || '#1a1a2e';
     const logoUrl = config.logo_url || '';
     const googleReviewUrl = config.google_review_url || 'https://g.page/review';
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
+    // Smart Base URL Detection for Vercel vs Local
+    let siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (!siteUrl || siteUrl.includes('localhost') || siteUrl.includes('192.168')) {
+      siteUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
+    }
+
     const qrTargetUrl = `${siteUrl}/review?src=qr`;
 
     const qrDataUrl = await QRCode.toDataURL(qrTargetUrl, {

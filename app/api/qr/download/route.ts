@@ -9,7 +9,11 @@ export async function GET(request: NextRequest) {
     const rows = await sql`
       SELECT value FROM system_config WHERE key = 'google_review_url'
     `;
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    // Smart Base URL Detection for Vercel vs Local
+    let siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (!siteUrl || siteUrl.includes('localhost') || siteUrl.includes('192.168')) {
+      siteUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
+    }
     const qrTargetUrl = `${siteUrl}/review?src=qr`;
 
     if (format === 'svg') {
