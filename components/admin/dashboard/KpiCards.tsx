@@ -27,10 +27,10 @@ function Delta({ current, previous, suffix = '' }: { current: number; previous: 
 }
 
 const cards = [
-  { key: 'total_scans' as const, title: 'Total QR Scans', icon: '📱', fmt: (v: number) => v.toLocaleString() },
-  { key: 'total_reviews_posted' as const, title: 'Reviews Posted', icon: '⭐', fmt: (v: number) => v.toLocaleString() },
-  { key: 'conversion_rate' as const, title: 'Conversion Rate', icon: '📊', fmt: (v: number) => `${v}%` },
-  { key: 'avg_star_rating' as const, title: 'Avg Star Rating', icon: '🌟', fmt: (v: number) => v.toFixed(1) },
+  { key: 'total_scans' as const, title: 'Total QR Scans', icon: '📱', fmt: (v: number) => (v || 0).toLocaleString() },
+  { key: 'total_reviews_posted' as const, title: 'Reviews Posted', icon: '⭐', fmt: (v: number) => (v || 0).toLocaleString() },
+  { key: 'conversion_rate' as const, title: 'Conversion Rate', icon: '📊', fmt: (v: number) => `${v || 0}%` },
+  { key: 'avg_star_rating' as const, title: 'Avg Star Rating', icon: '🌟', fmt: (v: number) => (v || 0).toFixed(1) },
 ];
 
 export function KpiCards({ kpiData, prevMonthData }: Props) {

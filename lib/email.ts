@@ -91,39 +91,26 @@ export async function sendWeeklyDigest(stats: WeeklyStats, toEmail: string) {
 }
 
 export async function sendPasswordResetEmail(toEmail: string, resetLink: string) {
+  // Ultra-simple HTML for 100% delivery and visibility
   const html = `
-<!DOCTYPE html>
-<html>
-<body style="margin:0;padding:0;background-color:#f4f4f7;font-family:Arial,Helvetica,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7;padding:32px 0;">
-    <tr><td align="center">
-      <table width="560" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;">
-        <tr>
-          <td style="background-color:#1a1a2e;padding:24px 32px;text-align:center;">
-            <h1 style="margin:0;color:#ffffff;font-size:22px;">Password Reset Request</h1>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:32px;color:#333;font-size:16px;line-height:1.5;">
-            <p>We received a request to reset your password for your ReviewHive Admin account.</p>
-            <p>Click the button below to choose a new password. This link will expire in 15 minutes.</p>
-            <div style="text-align:center;margin:32px 0;">
-              <a href="${resetLink}" style="display:inline-block;background-color:#3b82f6;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:6px;font-weight:bold;font-size:16px;">Reset Password</a>
-            </div>
-            <p style="font-size:14px;color:#666;">If you did not request this, please ignore this email. Your password will remain unchanged.</p>
-          </td>
-        </tr>
-      </table>
-      <p style="margin-top:16px;color:#999;font-size:11px;">This is an automated email from ReviewHive.</p>
-    </td></tr>
-  </table>
-</body>
-</html>`;
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+      <h2 style="color: #1a1a2e;">Password Reset Request</h2>
+      <p>We received a request to reset your ReviewHive password. Please click the button below to set a new password:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${resetLink}" style="background-color: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Reset Password</a>
+      </div>
+      <p style="font-size: 14px; color: #666;">If the button doesn't work, copy-paste this link in your browser:</p>
+      <p style="font-size: 12px; color: #3b82f6; word-break: break-all;">${resetLink}</p>
+      <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+      <p style="font-size: 11px; color: #999;">This link will expire in 15 minutes. If you didn't request this, ignore this mail.</p>
+    </div>
+  `;
 
   await transporter.sendMail({
-    from: `ReviewHive Security <${process.env.GMAIL_USER}>`,
+    from: `"ReviewHive Security" <${process.env.GMAIL_USER}>`,
     to: toEmail,
     subject: 'Reset Your ReviewHive Password',
+    text: `Reset your password by following this link: ${resetLink}. It expires in 15 minutes.`,
     html,
   });
 }
