@@ -10,7 +10,7 @@ interface FeedRow {
   course_name: string | null;
   star_rating: number | null;
   user_status: 'pursuing' | 'completed' | null;
-  review_source: 'AI' | 'Fallback Template' | 'Negative Feedback';
+  review_source: string; // Broaden to allow specific names
   status: 'Review Posted' | 'Incomplete' | 'Redirected to WhatsApp';
   generated_text?: string | null;
 }
@@ -86,9 +86,19 @@ export function ActivityFeed({ feedData, page, totalPages, selectedCourse, cours
                   {!row.user_status && <span className="text-xs text-gray-400">—</span>}
                 </td>
                 <td className="px-3 py-2">
-                  {row.review_source === 'AI' && <Badge variant="secondary" className="text-xs">AI</Badge>}
-                  {row.review_source === 'Fallback Template' && <Badge variant="outline" className="text-xs">Fallback Template</Badge>}
-                  {row.review_source === 'Negative Feedback' && <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-200 border-red-200 text-xs shadow-none">WhatsApp</Badge>}
+                  {(() => {
+                    const src = (row.review_source || '').toLowerCase();
+                    if (src.includes('gemini') || src.includes('openai') || src === 'ai') {
+                      return <Badge variant="secondary" className="text-xs">{row.review_source}</Badge>;
+                    }
+                    if (src === 'fallback template') {
+                      return <Badge variant="outline" className="text-xs">Fallback Template</Badge>;
+                    }
+                    if (src === 'negative feedback') {
+                      return <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-200 border-red-200 text-xs shadow-none">WhatsApp</Badge>;
+                    }
+                    return <Badge variant="secondary" className="text-xs">{row.review_source}</Badge>;
+                  })()}
                 </td>
                   <td className="px-3 py-3">
                     {row.status === 'Review Posted' && (

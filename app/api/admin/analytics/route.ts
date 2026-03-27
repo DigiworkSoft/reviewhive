@@ -252,9 +252,10 @@ export async function GET(request: NextRequest) {
               MAX(ct.name) AS course_name,
               MAX(re.star_rating) AS star_rating,
               MAX(re.user_status) AS user_status,
-              MAX(re.generated_text) AS generated_text,
+              (ARRAY_AGG(re.generated_text ORDER BY re.created_at DESC) FILTER (WHERE re.generated_text IS NOT NULL))[1] AS generated_text,
               CASE
-                WHEN BOOL_OR(re.event_type = 'ai_generated') THEN 'AI'
+                WHEN BOOL_OR(re.event_type = 'ai_generated') THEN 
+                  INITCAP(COALESCE((ARRAY_AGG(re.source ORDER BY re.created_at DESC) FILTER (WHERE re.event_type = 'ai_generated'))[1], 'AI'))
                 WHEN BOOL_OR(re.event_type = 'fallback_used') THEN 'Fallback Template'
                 ELSE 'Negative Feedback'
               END AS review_source,
@@ -268,10 +269,10 @@ export async function GET(request: NextRequest) {
             WHERE re.session_id IN (
               SELECT DISTINCT session_id FROM review_events
               WHERE event_type IN ('ai_generated', 'fallback_used', 'negative_feedback')
-                AND course_tag_id = ${courseFilter}
+              ${courseFilter ? `AND course_tag_id = ${courseFilter}` : ''}
             )
             GROUP BY re.session_id
-            ORDER BY MAX(re.created_at) DESC
+            ORDER BY created_at DESC
             LIMIT ${limit} OFFSET ${offset}
           `
         : await sql`
@@ -281,9 +282,10 @@ export async function GET(request: NextRequest) {
               MAX(ct.name) AS course_name,
               MAX(re.star_rating) AS star_rating,
               MAX(re.user_status) AS user_status,
-              MAX(re.generated_text) AS generated_text,
+              (ARRAY_AGG(re.generated_text ORDER BY re.created_at DESC) FILTER (WHERE re.generated_text IS NOT NULL))[1] AS generated_text,
               CASE
-                WHEN BOOL_OR(re.event_type = 'ai_generated') THEN 'AI'
+                WHEN BOOL_OR(re.event_type = 'ai_generated') THEN 
+                  INITCAP(COALESCE((ARRAY_AGG(re.source ORDER BY re.created_at DESC) FILTER (WHERE re.event_type = 'ai_generated'))[1], 'AI'))
                 WHEN BOOL_OR(re.event_type = 'fallback_used') THEN 'Fallback Template'
                 ELSE 'Negative Feedback'
               END AS review_source,
@@ -299,7 +301,7 @@ export async function GET(request: NextRequest) {
               WHERE event_type IN ('ai_generated', 'fallback_used', 'negative_feedback')
             )
             GROUP BY re.session_id
-            ORDER BY MAX(re.created_at) DESC
+            ORDER BY created_at DESC
             LIMIT ${limit} OFFSET ${offset}
           `;
 

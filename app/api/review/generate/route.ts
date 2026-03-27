@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod/v4';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generateText } from '@/lib/ai';
 import sql from '@/lib/db';
 import crypto from 'crypto';
 
@@ -69,8 +69,8 @@ function pickN<T>(arr: T[], n: number): T[] {
 }
 
 function randomLengthRange(): string {
-  const min = 30 + Math.floor(Math.random() * 15); // 30-44
-  const max = min + 10 + Math.floor(Math.random() * 10); // +10-19, so max is 40-63
+  const min = 30 + Math.floor(Math.random() * 15);
+  const max = min + 10 + Math.floor(Math.random() * 10);
   return `${min}–${Math.min(max, 60)}`;
 }
 
@@ -83,8 +83,7 @@ const generateSchema = z.object({
   source: z.string().optional(),
 });
 
-// ── Gemini AI call ─────────────────────────────────────────────────────────
-// ── Gemini AI call ─────────────────────────────────────────────────────────
+// ── AI Call ────────────────────────────────────────────────────────────────
 async function generateWithAI(
   academyName: string,
   courseTag: string,
@@ -92,10 +91,6 @@ async function generateWithAI(
   userStatus?: 'pursuing' | 'completed' | null
 ): Promise<string> {
   console.log(`--- AI Start: ${academyName} (${courseTag}) ---`);
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash'
-  });
 
   let statusContext = '';
   if (userStatus === 'pursuing') {
@@ -104,33 +99,44 @@ async function generateWithAI(
     statusContext = 'Write as a graduate who has completed the course.';
   }
 
-  const prompt = `Write a 2-3 sentence Google review for ${academyName} about the course ${courseTag}. 
+  const persona = pick(PERSONAS);
+  const template = pick(PROMPT_TEMPLATES)(persona);
+  const focus = pickN(FOCUS_AREAS, 2).join(' and ');
+  const lengthGuide = randomLengthRange();
+
+  const prompt = `
+Write a Google review for ${academyName} about ${courseTag}.
+
+${template}
+Focus on: ${focus}
 ${statusContext}
 Rating: ${starRating} stars.
 
-CRITICAL INSTRUCTIONS to pass AI Detection (Humanize the text):
-- Write in casual, conversational Indian English, exactly how a real student would type on WhatsApp or Google Maps.
-- DO NOT use words like: testament, delve, unprecedented, transformative, top-notch, game-changer, crucial, paramount, highly recommend. 
-- Instead of "highly recommend", use natural phrases like "definitely join" or "worth it".
-- Keep the vocabulary very simple and everyday natural.
-- Use a relatable and authentic tone. 
-- No emojis. 
+STYLE RULES:
+- Write in casual Indian English (like real students)
+- Keep it natural, slightly imperfect
+- Mix sentence lengths
+- Can use phrases like "honestly", "tbh", "at first I thought"
+- Avoid fancy or corporate words
 
-Just output the raw review text, nothing else.`;
+CONSTRAINTS:
+- Length: ${lengthGuide} words
+- No emojis
+- No repetitive sentence structure
+- Make it feel like a real personal experience
+
+OUTPUT:
+Only the review text.
+`;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12000);
 
   try {
-    const result = await model.generateContent(prompt);
+    const text = await generateText(prompt, { temperature: 0.85 });
     clearTimeout(timeout);
-
-    const response = await result.response;
-    const text = response.text().trim();
-    console.log('--- AI Success Output: ---');
-    console.log(text);
-    
-    return text.replace(/^"|"$/g, '').replace(/```json|```/g, '').trim();
+    console.log('--- AI Success ---\n', text);
+    return text;
   } catch (error) {
     clearTimeout(timeout);
     console.error('--- AI Failed: ---', error);
@@ -184,18 +190,17 @@ export async function POST(request: NextRequest) {
     const courseTag = courseRows.length > 0 ? courseRows[0].name : 'General';
 
     let review: string;
-    let reviewSource: 'ai' | 'fallback';
+    let reviewProvider: string;
 
     try {
       review = await generateWithAI(academyName, courseTag, star_rating, user_status);
-      reviewSource = 'ai';
+      reviewProvider = (process.env.AI_PROVIDER || 'gemini').toLowerCase();
     } catch (error) {
       review = await getFallbackTemplate(course_tag_id, star_rating, user_status);
-      reviewSource = 'fallback';
+      reviewProvider = 'fallback';
     }
 
-    // Return clean single review format
-    return NextResponse.json({ review, source: reviewSource });
+    return NextResponse.json({ review, provider: reviewProvider });
   } catch (error) {
     console.error('Generate error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

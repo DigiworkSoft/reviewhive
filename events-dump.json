@@ -1,242 +1,242 @@
 [
   {
     "event_type": "ai_generated",
-    "session_id": "993b77a0-d44c-48a4-a9fe-d9128e5dc7c3",
+    "session_id": "96e7d012-380f-42ba-9fb6-cd89547e889c",
     "star_rating": 5,
-    "user_status": null,
-    "created_at": "2026-03-27T07:36:51.475Z",
+    "user_status": "completed",
+    "created_at": "2026-03-27T18:54:56.734Z",
     "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
   },
   {
     "event_type": "rating_submitted",
-    "session_id": "993b77a0-d44c-48a4-a9fe-d9128e5dc7c3",
+    "session_id": "96e7d012-380f-42ba-9fb6-cd89547e889c",
     "star_rating": 5,
-    "user_status": null,
-    "created_at": "2026-03-27T07:36:46.702Z",
+    "user_status": "completed",
+    "created_at": "2026-03-27T18:54:53.145Z",
     "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
   },
   {
     "event_type": "status_selected",
-    "session_id": "993b77a0-d44c-48a4-a9fe-d9128e5dc7c3",
+    "session_id": "96e7d012-380f-42ba-9fb6-cd89547e889c",
     "star_rating": null,
     "user_status": null,
-    "created_at": "2026-03-27T07:36:45.352Z",
+    "created_at": "2026-03-27T18:54:51.047Z",
     "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
   },
   {
     "event_type": "course_selected",
-    "session_id": "993b77a0-d44c-48a4-a9fe-d9128e5dc7c3",
+    "session_id": "96e7d012-380f-42ba-9fb6-cd89547e889c",
     "star_rating": null,
     "user_status": null,
-    "created_at": "2026-03-27T07:36:44.440Z",
+    "created_at": "2026-03-27T18:54:45.452Z",
     "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
   },
   {
     "event_type": "scan",
-    "session_id": "993b77a0-d44c-48a4-a9fe-d9128e5dc7c3",
+    "session_id": "96e7d012-380f-42ba-9fb6-cd89547e889c",
     "star_rating": null,
     "user_status": null,
-    "created_at": "2026-03-27T07:36:41.956Z",
+    "created_at": "2026-03-27T18:54:38.752Z",
     "course_tag_id": null
   },
   {
-    "event_type": "rating_submitted",
-    "session_id": "2d49d21b-c102-403d-8405-49e2574239c1",
+    "event_type": "ai_generated",
+    "session_id": "b93f26a9-e0ad-4bb9-ab68-d475f0074a8c",
     "star_rating": 5,
-    "user_status": null,
-    "created_at": "2026-03-27T07:27:20.350Z",
+    "user_status": "pursuing",
+    "created_at": "2026-03-27T18:48:16.948Z",
     "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
-  },
-  {
-    "event_type": "course_selected",
-    "session_id": "2d49d21b-c102-403d-8405-49e2574239c1",
-    "star_rating": null,
-    "user_status": null,
-    "created_at": "2026-03-27T07:27:16.724Z",
-    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
-  },
-  {
-    "event_type": "scan",
-    "session_id": "2d49d21b-c102-403d-8405-49e2574239c1",
-    "star_rating": null,
-    "user_status": null,
-    "created_at": "2026-03-27T07:27:14.816Z",
-    "course_tag_id": null
   },
   {
     "event_type": "rating_submitted",
-    "session_id": "e2877aad-e191-4773-b4a2-9a91d6353a4c",
+    "session_id": "b93f26a9-e0ad-4bb9-ab68-d475f0074a8c",
     "star_rating": 5,
+    "user_status": "pursuing",
+    "created_at": "2026-03-27T18:48:14.818Z",
+    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
+  },
+  {
+    "event_type": "status_selected",
+    "session_id": "b93f26a9-e0ad-4bb9-ab68-d475f0074a8c",
+    "star_rating": null,
     "user_status": null,
-    "created_at": "2026-03-27T07:25:26.341Z",
+    "created_at": "2026-03-27T18:48:12.962Z",
     "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
   },
   {
     "event_type": "course_selected",
-    "session_id": "e2877aad-e191-4773-b4a2-9a91d6353a4c",
+    "session_id": "b93f26a9-e0ad-4bb9-ab68-d475f0074a8c",
     "star_rating": null,
     "user_status": null,
-    "created_at": "2026-03-27T07:25:22.794Z",
+    "created_at": "2026-03-27T18:48:11.763Z",
     "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
   },
   {
-    "event_type": "scan",
-    "session_id": "e2877aad-e191-4773-b4a2-9a91d6353a4c",
-    "star_rating": null,
-    "user_status": null,
-    "created_at": "2026-03-27T07:25:14.244Z",
-    "course_tag_id": null
-  },
-  {
-    "event_type": "rating_submitted",
-    "session_id": "a6fe5e11-c011-4cfd-8fb8-09f666fd169b",
+    "event_type": "ai_generated",
+    "session_id": "b93f26a9-e0ad-4bb9-ab68-d475f0074a8c",
     "star_rating": 5,
-    "user_status": null,
-    "created_at": "2026-03-27T07:23:02.989Z",
+    "user_status": "completed",
+    "created_at": "2026-03-27T18:40:01.468Z",
     "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
-  },
-  {
-    "event_type": "course_selected",
-    "session_id": "a6fe5e11-c011-4cfd-8fb8-09f666fd169b",
-    "star_rating": null,
-    "user_status": null,
-    "created_at": "2026-03-27T07:22:59.872Z",
-    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
-  },
-  {
-    "event_type": "scan",
-    "session_id": "a6fe5e11-c011-4cfd-8fb8-09f666fd169b",
-    "star_rating": null,
-    "user_status": null,
-    "created_at": "2026-03-27T07:22:58.233Z",
-    "course_tag_id": null
   },
   {
     "event_type": "rating_submitted",
-    "session_id": "89070ca9-3450-43b5-9c78-103b4bcadd40",
+    "session_id": "b93f26a9-e0ad-4bb9-ab68-d475f0074a8c",
     "star_rating": 5,
+    "user_status": "completed",
+    "created_at": "2026-03-27T18:39:57.396Z",
+    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
+  },
+  {
+    "event_type": "status_selected",
+    "session_id": "b93f26a9-e0ad-4bb9-ab68-d475f0074a8c",
+    "star_rating": null,
     "user_status": null,
-    "created_at": "2026-03-27T07:17:12.439Z",
+    "created_at": "2026-03-27T18:39:54.105Z",
     "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
   },
   {
     "event_type": "course_selected",
-    "session_id": "89070ca9-3450-43b5-9c78-103b4bcadd40",
+    "session_id": "b93f26a9-e0ad-4bb9-ab68-d475f0074a8c",
     "star_rating": null,
     "user_status": null,
-    "created_at": "2026-03-27T07:17:07.672Z",
+    "created_at": "2026-03-27T18:39:50.631Z",
     "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
   },
   {
     "event_type": "scan",
-    "session_id": "89070ca9-3450-43b5-9c78-103b4bcadd40",
+    "session_id": "b93f26a9-e0ad-4bb9-ab68-d475f0074a8c",
     "star_rating": null,
     "user_status": null,
-    "created_at": "2026-03-27T07:17:06.118Z",
+    "created_at": "2026-03-27T18:39:35.314Z",
     "course_tag_id": null
   },
   {
-    "event_type": "negative_feedback",
-    "session_id": "ca36d174-eea9-4c7b-891c-1558c62ce42d",
-    "star_rating": 4,
-    "user_status": null,
-    "created_at": "2026-03-27T07:10:08.510Z",
-    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
-  },
-  {
-    "event_type": "rating_submitted",
-    "session_id": "ca36d174-eea9-4c7b-891c-1558c62ce42d",
-    "star_rating": 4,
-    "user_status": null,
-    "created_at": "2026-03-27T07:10:08.483Z",
-    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
-  },
-  {
-    "event_type": "course_selected",
-    "session_id": "ca36d174-eea9-4c7b-891c-1558c62ce42d",
-    "star_rating": null,
-    "user_status": null,
-    "created_at": "2026-03-27T07:10:05.266Z",
-    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
-  },
-  {
-    "event_type": "scan",
-    "session_id": "ca36d174-eea9-4c7b-891c-1558c62ce42d",
-    "star_rating": null,
-    "user_status": null,
-    "created_at": "2026-03-27T07:09:56.551Z",
-    "course_tag_id": null
-  },
-  {
-    "event_type": "rating_submitted",
-    "session_id": "58d9f741-c503-4060-9d96-e98083ba06ca",
-    "star_rating": 4,
-    "user_status": null,
-    "created_at": "2026-03-27T07:02:17.854Z",
-    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
-  },
-  {
-    "event_type": "course_selected",
-    "session_id": "58d9f741-c503-4060-9d96-e98083ba06ca",
-    "star_rating": null,
-    "user_status": null,
-    "created_at": "2026-03-27T07:02:15.259Z",
-    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
-  },
-  {
-    "event_type": "scan",
-    "session_id": "58d9f741-c503-4060-9d96-e98083ba06ca",
-    "star_rating": null,
-    "user_status": null,
-    "created_at": "2026-03-27T07:02:11.653Z",
-    "course_tag_id": null
-  },
-  {
-    "event_type": "rating_submitted",
-    "session_id": "2e85a5ea-6404-4432-9f18-446acbab535e",
+    "event_type": "ai_generated",
+    "session_id": "0644e40d-70fa-4f65-92de-04f24acd0724",
     "star_rating": 5,
-    "user_status": null,
-    "created_at": "2026-03-27T07:01:13.107Z",
+    "user_status": "completed",
+    "created_at": "2026-03-27T18:06:19.921Z",
     "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
-  },
-  {
-    "event_type": "course_selected",
-    "session_id": "2e85a5ea-6404-4432-9f18-446acbab535e",
-    "star_rating": null,
-    "user_status": null,
-    "created_at": "2026-03-27T07:01:10.935Z",
-    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
-  },
-  {
-    "event_type": "scan",
-    "session_id": "2e85a5ea-6404-4432-9f18-446acbab535e",
-    "star_rating": null,
-    "user_status": null,
-    "created_at": "2026-03-27T07:01:09.752Z",
-    "course_tag_id": null
   },
   {
     "event_type": "rating_submitted",
-    "session_id": "88b2eba3-a3f6-4cbd-afbb-58817c88de49",
+    "session_id": "0644e40d-70fa-4f65-92de-04f24acd0724",
     "star_rating": 5,
+    "user_status": "completed",
+    "created_at": "2026-03-27T18:06:16.044Z",
+    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
+  },
+  {
+    "event_type": "status_selected",
+    "session_id": "0644e40d-70fa-4f65-92de-04f24acd0724",
+    "star_rating": null,
     "user_status": null,
-    "created_at": "2026-03-27T06:58:30.740Z",
+    "created_at": "2026-03-27T18:06:14.825Z",
     "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
   },
   {
     "event_type": "course_selected",
-    "session_id": "88b2eba3-a3f6-4cbd-afbb-58817c88de49",
+    "session_id": "0644e40d-70fa-4f65-92de-04f24acd0724",
     "star_rating": null,
     "user_status": null,
-    "created_at": "2026-03-27T06:58:26.959Z",
+    "created_at": "2026-03-27T18:06:04.762Z",
     "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
   },
   {
     "event_type": "scan",
-    "session_id": "88b2eba3-a3f6-4cbd-afbb-58817c88de49",
+    "session_id": "0644e40d-70fa-4f65-92de-04f24acd0724",
     "star_rating": null,
     "user_status": null,
-    "created_at": "2026-03-27T06:58:25.706Z",
+    "created_at": "2026-03-27T18:06:03.286Z",
     "course_tag_id": null
+  },
+  {
+    "event_type": "ai_generated",
+    "session_id": "6503927c-fb7f-4022-bed0-023bb3310c11",
+    "star_rating": 5,
+    "user_status": "completed",
+    "created_at": "2026-03-27T17:43:54.999Z",
+    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
+  },
+  {
+    "event_type": "rating_submitted",
+    "session_id": "6503927c-fb7f-4022-bed0-023bb3310c11",
+    "star_rating": 5,
+    "user_status": "completed",
+    "created_at": "2026-03-27T17:43:49.292Z",
+    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
+  },
+  {
+    "event_type": "status_selected",
+    "session_id": "6503927c-fb7f-4022-bed0-023bb3310c11",
+    "star_rating": null,
+    "user_status": null,
+    "created_at": "2026-03-27T17:43:47.976Z",
+    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
+  },
+  {
+    "event_type": "course_selected",
+    "session_id": "6503927c-fb7f-4022-bed0-023bb3310c11",
+    "star_rating": null,
+    "user_status": null,
+    "created_at": "2026-03-27T17:43:46.483Z",
+    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
+  },
+  {
+    "event_type": "ai_generated",
+    "session_id": "6503927c-fb7f-4022-bed0-023bb3310c11",
+    "star_rating": 5,
+    "user_status": "pursuing",
+    "created_at": "2026-03-27T17:37:33.748Z",
+    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
+  },
+  {
+    "event_type": "rating_submitted",
+    "session_id": "6503927c-fb7f-4022-bed0-023bb3310c11",
+    "star_rating": 5,
+    "user_status": "pursuing",
+    "created_at": "2026-03-27T17:37:28.847Z",
+    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
+  },
+  {
+    "event_type": "status_selected",
+    "session_id": "6503927c-fb7f-4022-bed0-023bb3310c11",
+    "star_rating": null,
+    "user_status": null,
+    "created_at": "2026-03-27T17:37:27.547Z",
+    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
+  },
+  {
+    "event_type": "course_selected",
+    "session_id": "6503927c-fb7f-4022-bed0-023bb3310c11",
+    "star_rating": null,
+    "user_status": null,
+    "created_at": "2026-03-27T17:37:23.096Z",
+    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
+  },
+  {
+    "event_type": "scan",
+    "session_id": "6503927c-fb7f-4022-bed0-023bb3310c11",
+    "star_rating": null,
+    "user_status": null,
+    "created_at": "2026-03-27T17:37:21.498Z",
+    "course_tag_id": null
+  },
+  {
+    "event_type": "ai_generated",
+    "session_id": "9bcebeb8-0435-4643-9485-dc0b4c52ef85",
+    "star_rating": 5,
+    "user_status": "completed",
+    "created_at": "2026-03-27T17:35:16.550Z",
+    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
+  },
+  {
+    "event_type": "rating_submitted",
+    "session_id": "9bcebeb8-0435-4643-9485-dc0b4c52ef85",
+    "star_rating": 5,
+    "user_status": "completed",
+    "created_at": "2026-03-27T17:35:10.872Z",
+    "course_tag_id": "dc94d92c-74ff-434a-bc17-755833904770"
   }
 ]

@@ -24,7 +24,7 @@ export function useReviewFlow() {
   const [selectedRating, setSelectedRating] = useState(0);
   const [userStatus, setUserStatus] = useState<'pursuing' | 'completed' | null>(null);
   const [review, setReview] = useState('');
-  const [reviewSource, setReviewSource] = useState<'ai' | 'fallback'>('ai');
+  const [reviewSource, setReviewSource] = useState<string>('ai');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [whatsappNumber, setWhatsappNumber] = useState('');
@@ -64,6 +64,7 @@ export function useReviewFlow() {
         user_status?: 'pursuing' | 'completed' | null;
         option_number_selected?: number | null;
         generated_text?: string | null;
+        source?: string | null;
       } = {}
     ) => {
       try {
@@ -75,7 +76,7 @@ export function useReviewFlow() {
             event_type: eventType,
             session_id: sessionIdRef.current,
             user_status: extras.user_status || userStatus, // Use provided or current state
-            source,
+            source: extras.source || source, // Use provider name or original marketing source
             ...extras,
           }),
         });
@@ -195,13 +196,14 @@ export function useReviewFlow() {
 
         const data = await res.json();
         setReview(data.review);
-        setReviewSource(data.source);
+        setReviewSource(data.provider);
         
-        // Log successful generation
-        logEvent(data.source === 'ai' ? 'ai_generated' : 'fallback_used', {
+        // Log successful generation with specific provider (Gemini/OpenAI) as source
+        logEvent(data.provider === 'fallback' ? 'fallback_used' : 'ai_generated', {
           course_tag_id: selectedCourse?.id,
           star_rating: rating,
           generated_text: data.review,
+          source: data.provider, // Override default 'poster/qr' source for this event
         });
 
         setCurrentStep('reviews');

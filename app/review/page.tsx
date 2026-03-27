@@ -82,8 +82,8 @@ function ReviewFlow() {
         {flow.currentStep === 'generating' && (
           <div className="flex flex-1 flex-col items-center justify-center py-12">
             <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent shadow-sm"></div>
-            <h3 className="text-lg font-bold text-gray-900">AI is writing...</h3>
-            <p className="text-sm text-gray-500">Creating a perfect review for you</p>
+            <h3 className="text-lg font-bold text-gray-900">Crafting your review...</h3>
+            <p className="text-sm text-gray-500">We&apos;re putting your experience into words.</p>
           </div>
         )}
 
