@@ -107,8 +107,16 @@ async function generateWithAI(
   const prompt = `Write a 2-3 sentence Google review for ${academyName} about the course ${courseTag}. 
 ${statusContext}
 Rating: ${starRating} stars.
-Conversational Indian English. No emojis. No jargon. 
-Just the review text, nothing else.`;
+
+CRITICAL INSTRUCTIONS to pass AI Detection (Humanize the text):
+- Write in casual, conversational Indian English, exactly how a real student would type on WhatsApp or Google Maps.
+- DO NOT use words like: testament, delve, unprecedented, transformative, top-notch, game-changer, crucial, paramount, highly recommend. 
+- Instead of "highly recommend", use natural phrases like "definitely join" or "worth it".
+- Keep the vocabulary very simple and everyday natural.
+- Use a relatable and authentic tone. 
+- No emojis. 
+
+Just output the raw review text, nothing else.`;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12000);
