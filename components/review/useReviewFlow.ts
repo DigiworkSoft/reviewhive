@@ -10,7 +10,7 @@ export interface CourseTag {
   description: string | null;
 }
 
-export type Step = 'course' | 'rating' | 'negative' | 'generating' | 'reviews' | 'instruction';
+export type Step = 'course' | 'status' | 'rating' | 'negative' | 'generating' | 'reviews' | 'instruction';
 
 // ── Hook ───────────────────────────────────────────────────────────────────
 export function useReviewFlow() {
@@ -22,6 +22,7 @@ export function useReviewFlow() {
   const [courseTags, setCourseTags] = useState<CourseTag[]>([]);
   const [selectedCourse, setSelectedCourseState] = useState<CourseTag | null>(null);
   const [selectedRating, setSelectedRating] = useState(0);
+  const [userStatus, setUserStatus] = useState<'pursuing' | 'completed' | null>(null);
   const [review, setReview] = useState('');
   const [reviewSource, setReviewSource] = useState<'ai' | 'fallback'>('ai');
   const [isLoading, setIsLoading] = useState(true);
@@ -32,16 +33,23 @@ export function useReviewFlow() {
 
   // ── Session ID (created once on mount) ─────────────────────────────────
   useEffect(() => {
-    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-      sessionIdRef.current = crypto.randomUUID();
+    const existing = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('review_session_id') : null;
+    if (existing) {
+      sessionIdRef.current = existing;
     } else {
-      // Fallback for non-secure contexts (HTTP on local network)
-      const arr = new Uint8Array(16);
-      crypto.getRandomValues(arr);
-      arr[6] = (arr[6] & 0x0f) | 0x40;
-      arr[8] = (arr[8] & 0x3f) | 0x80;
-      const hex = Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
-      sessionIdRef.current = `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+      let newId;
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        newId = crypto.randomUUID();
+      } else {
+        const arr = new Uint8Array(16);
+        crypto.getRandomValues(arr);
+        arr[6] = (arr[6] & 0x0f) | 0x40;
+        arr[8] = (arr[8] & 0x3f) | 0x80;
+        const hex = Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+        newId = `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+      }
+      sessionIdRef.current = newId;
+      if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('review_session_id', newId);
     }
   }, []);
 
@@ -53,16 +61,20 @@ export function useReviewFlow() {
         course_tag_id?: string | null;
         star_rating?: number | null;
         ai_used?: boolean | null;
+        user_status?: 'pursuing' | 'completed' | null;
         option_number_selected?: number | null;
+        generated_text?: string | null;
       } = {}
     ) => {
       try {
         await fetch('/api/review/event', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          keepalive: true,
           body: JSON.stringify({
             event_type: eventType,
             session_id: sessionIdRef.current,
+            user_status: extras.user_status || userStatus, // Use provided or current state
             source,
             ...extras,
           }),
@@ -71,7 +83,7 @@ export function useReviewFlow() {
         // Silent fail — don't block the user flow
       }
     },
-    [source]
+    [source, userStatus]
   );
 
   // ── Fetch course tags and config on mount ──────────────────────────────
@@ -110,19 +122,38 @@ export function useReviewFlow() {
   // ── Log scan on mount ──────────────────────────────────────────────────
   useEffect(() => {
     if (sessionIdRef.current) {
-      logEvent('scan');
+      const scanned = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('review_scanned') : null;
+      if (!scanned) {
+        logEvent('scan');
+        if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('review_scanned', 'true');
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [sessionIdRef.current, logEvent]);
 
   // ── selectCourse ───────────────────────────────────────────────────────
   const selectCourse = useCallback(
     (course: CourseTag) => {
       setSelectedCourseState(course);
       logEvent('course_selected', { course_tag_id: course.id });
-      setCurrentStep('rating');
+      setCurrentStep('status');
     },
     [logEvent]
+  );
+
+
+  // ── selectStatus ───────────────────────────────────────────────────────
+  const selectStatus = useCallback(
+    (status: 'pursuing' | 'completed') => {
+      setUserStatus(status);
+      logEvent('status_selected', { 
+        course_tag_id: selectedCourse?.id,
+        // Using option_number_selected as a proxy for status choice if needed, 
+        // but logEvent can be updated later if we need strict typing for status
+      });
+      setCurrentStep('rating');
+    },
+    [logEvent, selectedCourse]
   );
 
   // ── submitRating ───────────────────────────────────────────────────────
@@ -134,7 +165,7 @@ export function useReviewFlow() {
         star_rating: rating,
       });
 
-      if (rating <= 3) {
+      if (rating <= 4) {
         logEvent('negative_feedback', {
           course_tag_id: selectedCourse?.id,
           star_rating: rating,
@@ -143,7 +174,7 @@ export function useReviewFlow() {
         return;
       }
 
-      // 4★ or 5★ — proceed to AI generation
+      // 5★ — proceed to AI generation
       setCurrentStep('generating');
       try {
         const res = await fetch('/api/review/generate', {
@@ -152,6 +183,7 @@ export function useReviewFlow() {
           body: JSON.stringify({
             course_tag_id: selectedCourse?.id,
             star_rating: rating,
+            user_status: userStatus || undefined,
             session_id: sessionIdRef.current,
             source,
           }),
@@ -164,6 +196,14 @@ export function useReviewFlow() {
         const data = await res.json();
         setReview(data.review);
         setReviewSource(data.source);
+        
+        // Log successful generation
+        logEvent(data.source === 'ai' ? 'ai_generated' : 'fallback_used', {
+          course_tag_id: selectedCourse?.id,
+          star_rating: rating,
+          generated_text: data.review,
+        });
+
         setCurrentStep('reviews');
       } catch {
         setError('Something went wrong. Please try again.');
@@ -191,19 +231,7 @@ export function useReviewFlow() {
         document.body.removeChild(textarea);
       }
 
-      // 2. Immediately advance to instruction panel
-      setCurrentStep('instruction');
-
-      // 3. Log events (fire-and-forget)
-      logEvent('option_selected', {
-        course_tag_id: selectedCourse?.id,
-        star_rating: selectedRating,
-        ai_used: reviewSource === 'ai',
-      });
-      logEvent('post_on_google_clicked', {
-        course_tag_id: selectedCourse?.id,
-        star_rating: selectedRating,
-      });
+      // Navigation is now handled by ReviewCards inline
     },
     [selectedCourse, selectedRating, reviewSource, logEvent]
   );
@@ -211,6 +239,7 @@ export function useReviewFlow() {
   // ── resetFlow — go back to course selection ────────────────────────────
   const resetFlow = useCallback(() => {
     setSelectedRating(0);
+    setUserStatus(null);
     setCurrentStep('course');
   }, []);
 
@@ -233,6 +262,7 @@ export function useReviewFlow() {
     selectedRating,
     review,
     reviewSource,
+    userStatus,
     isLoading,
     error,
     googleReviewUrl,
@@ -242,6 +272,7 @@ export function useReviewFlow() {
 
     // Actions
     selectCourse,
+    selectStatus,
     submitRating,
     handleCopyAndOpen,
     resetFlow,

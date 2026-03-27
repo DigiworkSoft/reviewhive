@@ -37,6 +37,16 @@ export function ReviewCards({ flow }: Props) {
           const text = flow.review;
           const url = flow.googleReviewUrl;
           
+          flow.logEvent('option_selected', {
+            course_tag_id: flow.selectedCourse?.id,
+            star_rating: flow.selectedRating,
+            ai_used: flow.reviewSource === 'ai',
+          });
+          flow.logEvent('post_on_google_clicked', {
+            course_tag_id: flow.selectedCourse?.id,
+            star_rating: flow.selectedRating,
+          });
+
           // Robust Copy Function
           const performCopy = (val: string) => {
               const textArea = document.createElement("textarea");

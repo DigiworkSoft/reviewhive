@@ -13,13 +13,16 @@ const eventSchema = z.object({
     'option_selected',
     'post_on_google_clicked',
     'negative_feedback',
+    'status_selected',
   ]),
   course_tag_id: z.string().uuid().optional().nullable(),
   star_rating: z.number().int().min(1).max(5).optional().nullable(),
   session_id: z.string().uuid(),
+  user_status: z.enum(['pursuing', 'completed']).optional().nullable(),
   ai_used: z.boolean().optional().nullable(),
   option_number_selected: z.number().int().min(1).max(3).optional().nullable(),
   source: z.string().optional().nullable(),
+  generated_text: z.string().optional().nullable(),
 });
 
 function getIpHash(request: NextRequest): string {
@@ -63,7 +66,9 @@ export async function POST(request: NextRequest) {
         session_id,
         ip_hash,
         user_agent_category,
-        source
+        user_status,
+        source,
+        generated_text
       ) VALUES (
         ${data.event_type},
         ${data.course_tag_id ?? null},
@@ -73,7 +78,9 @@ export async function POST(request: NextRequest) {
         ${data.session_id},
         ${ipHash},
         ${uaCategory},
-        ${data.source ?? 'direct'}
+        ${data.user_status ?? null},
+        ${data.source ?? 'direct'},
+        ${data.generated_text ?? null}
       )
     `;
 

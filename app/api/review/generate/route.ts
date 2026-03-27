@@ -77,8 +77,9 @@ function randomLengthRange(): string {
 // ── Schema ─────────────────────────────────────────────────────────────────
 const generateSchema = z.object({
   course_tag_id: z.string().uuid(),
-  star_rating: z.number().int().min(4).max(5),
+  star_rating: z.number().int().min(5).max(5),
   session_id: z.string().uuid(),
+  user_status: z.enum(['pursuing', 'completed']).nullable().optional(),
   source: z.string().optional(),
 });
 
@@ -87,7 +88,8 @@ const generateSchema = z.object({
 async function generateWithAI(
   academyName: string,
   courseTag: string,
-  starRating: number
+  starRating: number,
+  userStatus?: 'pursuing' | 'completed' | null
 ): Promise<string> {
   console.log(`--- AI Start: ${academyName} (${courseTag}) ---`);
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
@@ -95,7 +97,15 @@ async function generateWithAI(
     model: 'gemini-2.5-flash'
   });
 
+  let statusContext = '';
+  if (userStatus === 'pursuing') {
+    statusContext = 'Write as a student currently attending the course.';
+  } else if (userStatus === 'completed') {
+    statusContext = 'Write as a graduate who has completed the course.';
+  }
+
   const prompt = `Write a 2-3 sentence Google review for ${academyName} about the course ${courseTag}. 
+${statusContext}
 Rating: ${starRating} stars.
 Conversational Indian English. No emojis. No jargon. 
 Just the review text, nothing else.`;
@@ -122,13 +132,15 @@ Just the review text, nothing else.`;
 
 async function getFallbackTemplate(
   courseTagId: string,
-  starRating: number
+  starRating: number,
+  userStatus?: 'pursuing' | 'completed' | null
 ): Promise<string> {
   const rows = await sql`
     SELECT template_text
     FROM fallback_templates
     WHERE (course_tag_id = ${courseTagId} OR course_tag_id IS NULL)
       AND star_rating = ${starRating}
+      AND (user_status = ${userStatus ?? null} OR user_status IS NULL)
       AND is_active = true
     ORDER BY
       CASE WHEN course_tag_id IS NOT NULL THEN 0 ELSE 1 END,
@@ -144,10 +156,11 @@ export async function POST(request: NextRequest) {
     const parsed = generateSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
+      console.error('Validation error:', parsed.error.format());
+      return NextResponse.json({ error: 'Invalid body', details: parsed.error.format() }, { status: 400 });
     }
 
-    const { course_tag_id, star_rating, session_id, source } = parsed.data;
+    const { course_tag_id, star_rating, session_id, user_status, source } = parsed.data;
     const ipHash = getIpHash(request);
 
     if (isRateLimited(ipHash)) {
@@ -166,10 +179,10 @@ export async function POST(request: NextRequest) {
     let reviewSource: 'ai' | 'fallback';
 
     try {
-      review = await generateWithAI(academyName, courseTag, star_rating);
+      review = await generateWithAI(academyName, courseTag, star_rating, user_status);
       reviewSource = 'ai';
     } catch (error) {
-      review = await getFallbackTemplate(course_tag_id, star_rating);
+      review = await getFallbackTemplate(course_tag_id, star_rating, user_status);
       reviewSource = 'fallback';
     }
 

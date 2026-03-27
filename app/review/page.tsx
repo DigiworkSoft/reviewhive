@@ -7,6 +7,7 @@ import { StarRating } from '@/components/review/StarRating';
 import { ReviewCards } from '@/components/review/ReviewCards';
 import { InstructionPanel } from '@/components/review/InstructionPanel';
 import { NegativeFeedback } from '@/components/review/NegativeFeedback';
+import { StatusSelector } from '@/components/review/StatusSelector';
 
 
 
@@ -22,8 +23,11 @@ function ReviewFlow() {
     );
   }
 
-  const stepNumber = flow.currentStep === 'course' ? 1 : flow.currentStep === 'rating' ? 2 : 3;
-  const totalSteps = 3;
+  const stepNumber = 
+    flow.currentStep === 'course' ? 1 : 
+    flow.currentStep === 'status' ? 2 : 
+    flow.currentStep === 'rating' ? 3 : 4;
+  const totalSteps = 4;
   const showProgress = flow.currentStep !== 'negative' && flow.currentStep !== 'instruction' && flow.currentStep !== 'generating';
 
   return (
@@ -43,9 +47,11 @@ function ReviewFlow() {
               <span>
                 {flow.currentStep === 'course'
                   ? 'Select Course'
-                  : flow.currentStep === 'rating'
-                    ? 'Rate Experience'
-                    : 'Your Review'}
+                  : flow.currentStep === 'status'
+                    ? 'Your Status'
+                    : flow.currentStep === 'rating'
+                      ? 'Rate Experience'
+                      : 'Your Review'}
               </span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
@@ -70,6 +76,7 @@ function ReviewFlow() {
         )}
 
         {flow.currentStep === 'course' && <CourseSelector flow={flow} />}
+        {flow.currentStep === 'status' && <StatusSelector flow={flow} />}
         {flow.currentStep === 'rating' && <StarRating flow={flow} />}
         
         {flow.currentStep === 'generating' && (

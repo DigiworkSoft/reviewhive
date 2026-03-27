@@ -8,7 +8,7 @@ export async function GET() {
     const rows = await sql`
       SELECT
         ft.id, ft.course_tag_id, ft.star_rating, ft.option_number,
-        ft.template_text, ft.is_active,
+        ft.template_text, ft.is_active, ft.user_status,
         ct.name AS course_name
       FROM fallback_templates ft
       LEFT JOIN course_tags ct ON ft.course_tag_id = ct.id

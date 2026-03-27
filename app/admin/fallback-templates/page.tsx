@@ -5,11 +5,13 @@ import { useState, useEffect, useCallback } from 'react';
 interface Template {
   id: string; course_tag_id: string | null; star_rating: number;
   option_number: number; template_text: string; course_name: string | null;
+  user_status: string | null;
 }
 
 export default function FallbackTemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [selectedRating, setSelectedRating] = useState(4);
+  const [selectedRating, setSelectedRating] = useState(5);
+  const [selectedStatus, setSelectedStatus] = useState<'pursuing' | 'completed'>('pursuing');
   const [edits, setEdits] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
@@ -22,7 +24,9 @@ export default function FallbackTemplatesPage() {
 
   // Show only 1 template per star rating (generic, no course filter)
   const filtered = templates.filter(
-    (t) => !t.course_tag_id && t.star_rating === selectedRating
+    (t) => !t.course_tag_id && 
+           t.star_rating === selectedRating && 
+           (!t.user_status || t.user_status === selectedStatus)
   ).sort((a, b) => a.option_number - b.option_number).slice(0, 1);
 
   const handleSave = async () => {
@@ -40,13 +44,29 @@ export default function FallbackTemplatesPage() {
     <div className="space-y-4 p-4 md:p-6">
       <h1 className="text-xl font-bold text-gray-900">Fallback Templates</h1>
       <p className="text-sm text-gray-500">
-        This template is used when AI generation fails. One template per star rating.
+        This template is used only when AI generation fails. Since 4★ reviews go to WhatsApp, only 5★ templates are used here.
       </p>
       <div className="flex gap-1">
-        {[4, 5].map((r) => (
+        {[5].map((r) => (
           <button key={r} onClick={() => setSelectedRating(r)}
             className={`rounded-lg px-4 py-2 text-sm font-medium ${selectedRating === r ? 'bg-yellow-400 text-white' : 'border bg-white text-gray-600'}`}>
             {r}★
+          </button>
+        ))}
+      </div>
+
+      <div className="flex gap-2 border-b border-gray-100 pb-1">
+        {['pursuing', 'completed'].map((s) => (
+          <button
+            key={s}
+            onClick={() => setSelectedStatus(s as any)}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              selectedStatus === s
+                ? 'border-b-2 border-blue-600 text-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {s.charAt(0).toUpperCase() + s.slice(1)}
           </button>
         ))}
       </div>
@@ -57,7 +77,7 @@ export default function FallbackTemplatesPage() {
         {filtered.map((t) => (
           <div key={t.id} className="rounded-xl border bg-white p-4">
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-blue-600">
-              Fallback Template — {selectedRating}★ Reviews
+              Fallback Template — {selectedRating}★ {t.user_status || 'General'}
             </label>
             <textarea
               value={edits[t.id] ?? t.template_text}

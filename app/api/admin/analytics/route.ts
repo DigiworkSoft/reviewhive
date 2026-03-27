@@ -247,9 +247,12 @@ export async function GET(request: NextRequest) {
       const rows = courseFilter
         ? await sql`
             SELECT
+              re.session_id,
               MAX(re.created_at) AS created_at,
               MAX(ct.name) AS course_name,
               MAX(re.star_rating) AS star_rating,
+              MAX(re.user_status) AS user_status,
+              MAX(re.generated_text) AS generated_text,
               CASE
                 WHEN BOOL_OR(re.event_type = 'ai_generated') THEN 'AI'
                 WHEN BOOL_OR(re.event_type = 'fallback_used') THEN 'Fallback Template'
@@ -273,9 +276,12 @@ export async function GET(request: NextRequest) {
           `
         : await sql`
             SELECT
+              re.session_id,
               MAX(re.created_at) AS created_at,
               MAX(ct.name) AS course_name,
               MAX(re.star_rating) AS star_rating,
+              MAX(re.user_status) AS user_status,
+              MAX(re.generated_text) AS generated_text,
               CASE
                 WHEN BOOL_OR(re.event_type = 'ai_generated') THEN 'AI'
                 WHEN BOOL_OR(re.event_type = 'fallback_used') THEN 'Fallback Template'
