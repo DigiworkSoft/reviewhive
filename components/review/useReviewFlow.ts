@@ -63,6 +63,7 @@ export function useReviewFlow() {
         star_rating?: number | null;
         ai_used?: boolean | null;
         user_status?: 'pursuing' | 'completed' | null;
+        reviewer_type?: 'student' | 'parent' | null;
         option_number_selected?: number | null;
         generated_text?: string | null;
         source?: string | null;
