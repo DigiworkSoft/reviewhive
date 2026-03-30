@@ -2,30 +2,44 @@
 
 import { useState, useEffect } from 'react';
 
+const COURSE_TYPES = [
+  { value: 'academic', label: 'Academic' },
+  { value: 'cet', label: 'CET' },
+  { value: 'programming', label: 'Programming' },
+  { value: 'cyber_security', label: 'Cyber Security' },
+  { value: 'other', label: 'Other' },
+];
+
 interface FormData {
   name: string;
   description: string;
+  course_type: string;
+  faculty_names: string;
   display_order: number;
 }
 
 interface Props {
   onSubmit: (data: FormData) => void;
-  initialValues?: { name: string; description: string | null; display_order: number } | null;
+  initialValues?: { name: string; description: string | null; course_type?: string | null; faculty_names?: string | null; display_order: number } | null;
   onCancel?: () => void;
 }
 
 export function CourseTagForm({ onSubmit, initialValues, onCancel }: Props) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [courseType, setCourseType] = useState('other');
+  const [facultyNames, setFacultyNames] = useState('');
   const [displayOrder, setDisplayOrder] = useState(0);
 
   useEffect(() => {
     if (initialValues) {
       setName(initialValues.name);
       setDescription(initialValues.description || '');
+      setCourseType(initialValues.course_type || 'other');
+      setFacultyNames(initialValues.faculty_names || '');
       setDisplayOrder(initialValues.display_order);
     } else {
-      setName(''); setDescription(''); setDisplayOrder(0);
+      setName(''); setDescription(''); setCourseType('other'); setFacultyNames(''); setDisplayOrder(0);
     }
   }, [initialValues]);
 
@@ -39,6 +53,27 @@ export function CourseTagForm({ onSubmit, initialValues, onCancel }: Props) {
           className="w-full rounded-lg border px-3 py-2 text-sm" />
         <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description (optional)"
           className="w-full rounded-lg border px-3 py-2 text-sm" />
+        <div>
+          <label className="mb-1 block text-xs font-medium text-gray-500">Course Type</label>
+          <select
+            value={courseType}
+            onChange={(e) => setCourseType(e.target.value)}
+            className="w-full rounded-lg border px-3 py-2 text-sm"
+          >
+            {COURSE_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-gray-500">Faculty Names (comma-separated)</label>
+          <input
+            value={facultyNames}
+            onChange={(e) => setFacultyNames(e.target.value)}
+            placeholder="e.g. Suresh Sir, Vansh Agrawal Sir"
+            className="w-full rounded-lg border px-3 py-2 text-sm"
+          />
+        </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-500">Display Order (lower = shown first)</label>
           <input
@@ -54,7 +89,7 @@ export function CourseTagForm({ onSubmit, initialValues, onCancel }: Props) {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => { if (name.trim()) onSubmit({ name: name.trim(), description: description.trim(), display_order: displayOrder }); }}
+            onClick={() => { if (name.trim()) onSubmit({ name: name.trim(), description: description.trim(), course_type: courseType, faculty_names: facultyNames.trim(), display_order: displayOrder }); }}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
             {initialValues ? 'Update' : 'Add'}

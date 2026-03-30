@@ -6,21 +6,19 @@ interface Props {
   flow: ReturnType<typeof useReviewFlow>;
 }
 
-export function StatusSelector({ flow }: Props) {
-  const isParent = flow.reviewerType === 'parent';
-
+export function RoleSelector({ flow }: Props) {
   return (
     <div className="flex flex-1 flex-col">
       <h2 className="mb-1 text-lg font-semibold text-gray-900">
-        {isParent ? "What is your child's current status?" : 'What is your current status?'}
+        Who are you?
       </h2>
       <p className="mb-6 text-sm text-gray-500">
-        This helps us personalize your review for {flow.selectedCourse?.name}
+        Let us know so we can tailor your review experience
       </p>
 
       <div className="space-y-4">
         <button
-          onClick={() => flow.selectStatus('pursuing')}
+          onClick={() => flow.selectRole('student')}
           className="flex w-full items-center gap-4 rounded-xl border-2 border-gray-200 bg-white p-4 text-left transition-all hover:border-blue-400 hover:bg-blue-50 active:scale-[0.98]"
         >
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600">
@@ -29,33 +27,26 @@ export function StatusSelector({ flow }: Props) {
             </svg>
           </div>
           <div>
-            <div className="font-bold text-gray-900">{isParent ? 'Currently pursuing' : 'I am currently pursuing'}</div>
-            <div className="text-sm text-gray-500">{isParent ? 'My child is still a student at the academy' : 'I am still a student at the academy'}</div>
+            <div className="font-bold text-gray-900">I am a Student</div>
+            <div className="text-sm text-gray-500">I study or studied at this academy</div>
           </div>
         </button>
 
         <button
-          onClick={() => flow.selectStatus('completed')}
+          onClick={() => flow.selectRole('parent')}
           className="flex w-full items-center gap-4 rounded-xl border-2 border-gray-200 bg-white p-4 text-left transition-all hover:border-blue-400 hover:bg-blue-50 active:scale-[0.98]"
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-purple-600">
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
           <div>
-            <div className="font-bold text-gray-900">{isParent ? 'Has completed' : 'I have completed'}</div>
-            <div className="text-sm text-gray-500">{isParent ? 'My child is an alumnus or has finished the course' : 'I am an alumnus or have finished the course'}</div>
+            <div className="font-bold text-gray-900">I am a Parent</div>
+            <div className="text-sm text-gray-500">My child studies or studied here</div>
           </div>
         </button>
       </div>
-
-      <button
-        onClick={() => flow.resetFlow()}
-        className="mt-8 text-sm text-gray-500 hover:text-gray-700 mx-auto"
-      >
-        ← Back to course selection
-      </button>
     </div>
   );
 }

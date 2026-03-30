@@ -6,6 +6,7 @@ import crypto from 'crypto';
 const eventSchema = z.object({
   event_type: z.enum([
     'scan',
+    'role_selected',
     'course_selected',
     'rating_submitted',
     'ai_generated',
@@ -19,6 +20,7 @@ const eventSchema = z.object({
   star_rating: z.number().int().min(1).max(5).optional().nullable(),
   session_id: z.string().uuid(),
   user_status: z.enum(['pursuing', 'completed']).optional().nullable(),
+  reviewer_type: z.enum(['student', 'parent']).optional().nullable(),
   ai_used: z.boolean().optional().nullable(),
   option_number_selected: z.number().int().min(1).max(3).optional().nullable(),
   source: z.string().optional().nullable(),
@@ -67,6 +69,7 @@ export async function POST(request: NextRequest) {
         ip_hash,
         user_agent_category,
         user_status,
+        reviewer_type,
         source,
         generated_text
       ) VALUES (
@@ -79,6 +82,7 @@ export async function POST(request: NextRequest) {
         ${ipHash},
         ${uaCategory},
         ${data.user_status ?? null},
+        ${data.reviewer_type ?? null},
         ${data.source ?? 'direct'},
         ${data.generated_text ?? null}
       )

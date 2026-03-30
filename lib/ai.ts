@@ -11,6 +11,7 @@
 
 export interface AIOptions {
   temperature?: number;
+  systemMessage?: string;
 }
 
 export async function generateText(prompt: string, options?: AIOptions): Promise<string> {
@@ -51,11 +52,17 @@ async function generateWithOpenAI(prompt: string, options?: AIOptions): Promise<
   const model = process.env.AI_MODEL || 'gpt-4o-mini';
   const openai = new OpenAI({ apiKey });
 
+  const messages: { role: 'system' | 'user'; content: string }[] = [];
+  if (options?.systemMessage) {
+    messages.push({ role: 'system', content: options.systemMessage });
+  }
+  messages.push({ role: 'user', content: prompt });
+
   const completion = await openai.chat.completions.create({
     model,
-    messages: [{ role: 'user', content: prompt }],
+    messages,
     temperature: options?.temperature ?? 0.85,
-    max_tokens: 200,
+    max_tokens: 500,
   });
 
   return completion.choices[0]?.message?.content?.trim() ?? '';

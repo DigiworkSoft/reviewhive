@@ -5,7 +5,7 @@ import sql from '@/lib/db';
 export async function GET() {
   try {
     const rows = await sql`
-      SELECT id, name, description
+      SELECT id, name, description, course_type, faculty_names
       FROM course_tags
       WHERE is_active = true
       ORDER BY display_order ASC, name ASC

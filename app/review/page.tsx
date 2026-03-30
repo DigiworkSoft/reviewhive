@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react';
 import { useReviewFlow } from '@/components/review/useReviewFlow';
+import { RoleSelector } from '@/components/review/RoleSelector';
 import { CourseSelector } from '@/components/review/CourseSelector';
 import { StarRating } from '@/components/review/StarRating';
 import { ReviewCards } from '@/components/review/ReviewCards';
@@ -24,10 +25,11 @@ function ReviewFlow() {
   }
 
   const stepNumber = 
-    flow.currentStep === 'course' ? 1 : 
-    flow.currentStep === 'status' ? 2 : 
-    flow.currentStep === 'rating' ? 3 : 4;
-  const totalSteps = 4;
+    flow.currentStep === 'role' ? 1 :
+    flow.currentStep === 'course' ? 2 : 
+    flow.currentStep === 'status' ? 3 : 
+    flow.currentStep === 'rating' ? 4 : 5;
+  const totalSteps = 5;
   const showProgress = flow.currentStep !== 'negative' && flow.currentStep !== 'instruction' && flow.currentStep !== 'generating';
 
   return (
@@ -45,13 +47,15 @@ function ReviewFlow() {
             <div className="mb-2 flex justify-between text-xs text-gray-500">
               <span>Step {stepNumber} of {totalSteps}</span>
               <span>
-                {flow.currentStep === 'course'
-                  ? 'Select Course'
-                  : flow.currentStep === 'status'
-                    ? 'Your Status'
-                    : flow.currentStep === 'rating'
-                      ? 'Rate Experience'
-                      : 'Your Review'}
+                {flow.currentStep === 'role'
+                  ? 'Who Are You'
+                  : flow.currentStep === 'course'
+                    ? 'Select Course'
+                    : flow.currentStep === 'status'
+                      ? 'Your Status'
+                      : flow.currentStep === 'rating'
+                        ? 'Rate Experience'
+                        : 'Your Review'}
               </span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
@@ -75,6 +79,7 @@ function ReviewFlow() {
           </div>
         )}
 
+        {flow.currentStep === 'role' && <RoleSelector flow={flow} />}
         {flow.currentStep === 'course' && <CourseSelector flow={flow} />}
         {flow.currentStep === 'status' && <StatusSelector flow={flow} />}
         {flow.currentStep === 'rating' && <StarRating flow={flow} />}

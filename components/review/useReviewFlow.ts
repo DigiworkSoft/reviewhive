@@ -10,7 +10,7 @@ export interface CourseTag {
   description: string | null;
 }
 
-export type Step = 'course' | 'status' | 'rating' | 'negative' | 'generating' | 'reviews' | 'instruction';
+export type Step = 'role' | 'course' | 'status' | 'rating' | 'negative' | 'generating' | 'reviews' | 'instruction';
 
 // ── Hook ───────────────────────────────────────────────────────────────────
 export function useReviewFlow() {
@@ -18,11 +18,12 @@ export function useReviewFlow() {
   const source = searchParams.get('src') || 'direct';
 
   const sessionIdRef = useRef<string>('');
-  const [currentStep, setCurrentStep] = useState<Step>('course');
+  const [currentStep, setCurrentStep] = useState<Step>('role');
   const [courseTags, setCourseTags] = useState<CourseTag[]>([]);
   const [selectedCourse, setSelectedCourseState] = useState<CourseTag | null>(null);
   const [selectedRating, setSelectedRating] = useState(0);
   const [userStatus, setUserStatus] = useState<'pursuing' | 'completed' | null>(null);
+  const [reviewerType, setReviewerType] = useState<'student' | 'parent' | null>(null);
   const [review, setReview] = useState('');
   const [reviewSource, setReviewSource] = useState<string>('ai');
   const [isLoading, setIsLoading] = useState(true);
@@ -142,6 +143,16 @@ export function useReviewFlow() {
     [logEvent]
   );
 
+  // ── selectRole ─────────────────────────────────────────────────────────
+  const selectRole = useCallback(
+    (role: 'student' | 'parent') => {
+      setReviewerType(role);
+      logEvent('role_selected', { reviewer_type: role });
+      setCurrentStep('course');
+    },
+    [logEvent]
+  );
+
 
   // ── selectStatus ───────────────────────────────────────────────────────
   const selectStatus = useCallback(
@@ -185,6 +196,7 @@ export function useReviewFlow() {
             course_tag_id: selectedCourse?.id,
             star_rating: rating,
             user_status: userStatus || undefined,
+            reviewer_type: reviewerType || undefined,
             session_id: sessionIdRef.current,
             source,
           }),
@@ -238,11 +250,11 @@ export function useReviewFlow() {
     [selectedCourse, selectedRating, reviewSource, logEvent]
   );
 
-  // ── resetFlow — go back to course selection ────────────────────────────
+  // ── resetFlow — go back to role selection ──────────────────────────────
   const resetFlow = useCallback(() => {
     setSelectedRating(0);
     setUserStatus(null);
-    setCurrentStep('course');
+    setCurrentStep('role');
   }, []);
 
   // ── clearError ─────────────────────────────────────────────────────────
@@ -265,6 +277,7 @@ export function useReviewFlow() {
     review,
     reviewSource,
     userStatus,
+    reviewerType,
     isLoading,
     error,
     googleReviewUrl,
@@ -273,6 +286,7 @@ export function useReviewFlow() {
     source,
 
     // Actions
+    selectRole,
     selectCourse,
     selectStatus,
     submitRating,

@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod/v4';
 import sql from '@/lib/db';
 
+const COURSE_TYPES = ['academic', 'cet', 'programming', 'cyber_security', 'other'] as const;
+
 const updateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional(),
+  course_type: z.enum(COURSE_TYPES).optional(),
+  faculty_names: z.string().max(255).optional().nullable(),
   display_order: z.number().int().min(0).optional(),
   is_active: z.boolean().optional(),
 });
@@ -23,18 +27,20 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid request body', details: parsed.error.issues }, { status: 400 });
     }
 
-    const { name, description, display_order, is_active } = parsed.data;
+    const { name, description, course_type, faculty_names, display_order, is_active } = parsed.data;
 
     const rows = await sql`
       UPDATE course_tags
       SET
         name = COALESCE(${name ?? null}, name),
         description = COALESCE(${description ?? null}, description),
+        course_type = COALESCE(${course_type ?? null}, course_type),
+        faculty_names = ${faculty_names === undefined ? sql`faculty_names` : faculty_names},
         display_order = COALESCE(${display_order ?? null}, display_order),
         is_active = COALESCE(${is_active ?? null}, is_active),
         updated_at = NOW()
       WHERE id = ${id}
-      RETURNING id, name, description, display_order, is_active
+      RETURNING id, name, description, course_type, faculty_names, display_order, is_active
     `;
 
     if (rows.length === 0) {

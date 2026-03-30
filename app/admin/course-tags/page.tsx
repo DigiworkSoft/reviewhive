@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { CourseTagTable } from '@/components/admin/course-tags/CourseTagTable';
 import { CourseTagForm } from '@/components/admin/course-tags/CourseTagForm';
 
-interface Tag { id: string; name: string; description: string | null; display_order: number; is_active: boolean; }
+interface Tag { id: string; name: string; description: string | null; course_type: string | null; faculty_names: string | null; display_order: number; is_active: boolean; }
 
 export default function CourseTagsPage() {
   const [tags, setTags] = useState<Tag[]>([]);
