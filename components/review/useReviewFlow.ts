@@ -258,6 +258,12 @@ export function useReviewFlow() {
     setCurrentStep('role');
   }, []);
 
+  // ── goBackToRating — return to star rating step ────────────────────────
+  const goBackToRating = useCallback(() => {
+    setSelectedRating(0);
+    setCurrentStep('rating');
+  }, []);
+
   // ── clearError ─────────────────────────────────────────────────────────
   const clearError = useCallback(() => {
     setError(null);
@@ -293,6 +299,7 @@ export function useReviewFlow() {
     submitRating,
     handleCopyAndOpen,
     resetFlow,
+    goBackToRating,
     clearError,
     logEvent,
   };
