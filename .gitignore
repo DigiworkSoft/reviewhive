@@ -46,6 +46,9 @@ list-dbs.ts
 list-academy-tables.ts
 reset-db.ts
 tmp_*.ts
+migrate-*.ts
+FUTURE_REQUIREMENTS.md
+GROWHIVE_PRODUCT.md
 
 # typescript
 *.tsbuildinfo
