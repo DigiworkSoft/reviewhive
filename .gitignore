@@ -49,6 +49,7 @@ tmp_*.ts
 migrate-*.ts
 FUTURE_REQUIREMENTS.md
 GROWHIVE_PRODUCT.md
+GROWHIVE_PRODUCT.pdf
 
 # typescript
 *.tsbuildinfo
