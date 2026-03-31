@@ -47,39 +47,107 @@ function randomTemp(): number {
 
 // 1. Opening styles (wide pool — never repeat same start pattern)
 const STUDENT_OPENINGS = [
-  'Start with a direct bold opinion about the academy.',
+  // ── Gratitude ──
+  'Start with deep gratitude — "So thankful I found this place..."',
+  'Start with gratitude — thank the academy or a teacher directly.',
+  'Start with heartfelt thanks — "Can\'t thank enough for what this academy did for me"',
+  'Start with appreciation — "I really appreciate the effort the teachers put in"',
+  'Start with a thankful tone — "Grateful that I chose this academy for my preparation"',
+  // ── Journey-based ──
   'Start with a personal story — "When I first joined..."',
-  'Start with faculty praise — mention the teacher first.',
-  'Start mid-thought, abruptly — "honestly didn\'t expect much but..."',
-  'Start with a comparison to other coaching/classes you tried before.',
+  'Start with your journey — "My journey with this academy started when..."',
+  'Start with a flashback — "I remember being so confused before joining..."',
+  'Start with how you found this place — "A friend told me about this academy and..."',
+  'Start with your first day experience — "On my first day here, I knew this was different"',
+  'Start with how long you\'ve been here — "It\'s been 6 months since I joined and..."',
+  'Start with what made you join — "I was searching for good coaching and..."',
+  // ── Problem-solution ──
+  'Start with a struggle — "I was really struggling with my studies before joining..."',
+  'Start with a problem-solution framing — "I had almost given up on [subject] but then..."',
+  'Start with academic difficulty — "My weak subject was always a problem until I joined here"',
+  'Start with confusion — "I was so confused about how to prepare but this academy changed that"',
+  'Start with a challenge you faced — "preparing on my own was not working, so I joined here"',
+  // ── Recommendation style ──
   'Start with a question — "looking for good coaching in [city]?"',
-  'Start with your result or achievement first, then explain.',
-  'Start with what your friend told you about the academy before joining.',
-  'Start with a single strong word or phrase — "Amazing.", "Best decision.", "Worth it."',
   'Start by addressing future students directly — "If you\'re confused about where to join..."',
-  'Start with doubt or skepticism you had before joining, then how it changed.',
+  'Start with a recommendation — "I would 100% recommend this to anyone preparing for..."',
+  'Start with strong endorsement — "If anyone asks me which academy to join, I always say..."',
+  'Start with advice — "My advice to anyone preparing: just join this academy."',
+  // ── Emotional storytelling ──
+  'Start with an emotional memory — "I still remember the day I got my result..."',
+  'Start unexpectedly — "Never thought I\'d be writing a review but honestly..."',
+  'Start with surprise — "I was shocked at how much I improved in just 2 months"',
+  'Start with relief — "Finally! After trying multiple institutes, this one actually worked"',
+  'Start with pride — "So proud of myself and grateful to this academy for the result"',
+  // ── Direct/Bold ──
+  'Start with a direct bold opinion about the academy.',
+  'Start with a single strong word or phrase — "Amazing.", "Best decision.", "Worth it."',
+  'Start with conviction — "Best coaching center. Period."',
+  'Start with a bold claim — "This is hands down the best academy I\'ve attended"',
+  'Start bluntly — "Not gonna lie, this place is actually really good"',
+  // ── Experience-based ──
+  'Start with faculty praise — mention the teacher first.',
   'Start with a specific class or moment that stood out to you.',
   'Start with how the academy changed your daily routine or study habits.',
-  'Start with gratitude — thank the academy or a teacher directly.',
+  'Start with the teaching quality — "The way they teach here is completely different"',
+  'Start with what surprised you — "What I didn\'t expect was how much personal attention..."',
+  'Start with a comparison to your previous experience — "My old classes were nothing like this"',
+  // ── Casual/Natural ──
+  'Start mid-thought, abruptly — "honestly didn\'t expect much but..."',
   'Start with a casual, lazy opener — "so basically I joined here and..."',
+  'Start casually — "tbh I was skeptical at first but..."',
+  'Start informally — "okk so I have been studying here for a while and..."',
+  'Start with a comparison to other coaching/classes you tried before.',
+  'Start with your result or achievement first, then explain.',
+  'Start with what your friend told you about the academy before joining.',
+  'Start with doubt or skepticism you had before joining, then how it changed.',
 ];
 
 const PARENT_OPENINGS = [
+  // ── Concern/Relief ──
   'Start with your concern before enrolling your child.',
+  'Start with relief — "finally found the right coaching for my child..."',
+  'Start with worry — "I was worried about my child\'s preparation until..."',
+  'Start with a struggle — "We tried many coaching centers before finding this one"',
+  'Start with parental concern — "As a parent, finding the right academy was my priority"',
+  'Start with search — "After a long search for quality coaching, we found..."',
+  // ── Improvement/Results ──
   'Start with the improvement you noticed in your child.',
+  'Start with your child\'s result or achievement.',
+  'Start with visible change — "The transformation in my child\'s studies has been remarkable"',
+  'Start with performance — "My child\'s marks improved significantly after joining"',
+  'Start with confidence — "My child is so much more confident now after attending classes here"',
+  'Start with comparison — "The difference in my child\'s performance before and after is amazing"',
+  // ── Recommendation ──
   'Start with a direct recommendation — "I would recommend this academy..."',
   'Start with how another parent recommended this place to you.',
-  'Start with your child\'s result or achievement.',
+  'Start by addressing other parents — "to all parents looking for..."',
+  'Start with strong endorsement — "If any parent is looking for quality coaching, look no further"',
+  'Start with advice — "My sincere advice to fellow parents: enroll your child here"',
+  // ── Emotional ──
+  'Start with pride — "So proud of what my child has achieved with this academy"',
+  'Start with gratitude — "Can\'t express how thankful our family is for this academy"',
+  'Start with happiness — "Seeing my child excel has been the greatest joy"',
+  'Start with a specific moment — "When my child came home excited about studies, I knew..."',
+  'Start with an emotional realization — "I still remember the day my child got their result"',
+  // ── Trust/Environment ──
   'Start with appreciation for a specific teacher.',
   'Start with the environment or discipline you observed.',
+  'Start with trust — how the teachers communicate with parents.',
+  'Start with safety — "As a parent, safety and discipline matter and this academy delivers"',
+  'Start with teacher dedication — "The teachers here treat every child as their own"',
+  // ── Experience ──
   'Start with a comparison to your child\'s previous coaching.',
   'Start with what your child says about the academy at home.',
-  'Start with relief — "finally found the right coaching..."',
   'Start with how long your child has been studying here.',
-  'Start by addressing other parents — "to all parents looking for..."',
   'Start with a specific moment when you realized this was the right choice.',
-  'Start with trust — how the teachers communicate with parents.',
   'Start with how your child\'s confidence or attitude changed.',
+  'Start with an observation — "I have noticed how much my child looks forward to classes"',
+  'Start with practical benefits — "The timings, the approach, and the results — everything is good"',
+  // ── Casual/Natural ──
+  'Start casually — "We enrolled our child here recently and are very happy so far"',
+  'Start simply — "Good academy with good teachers. My child enjoys going here."',
+  'Start with fact — "My child has been here for [time] and the progress is clear"',
 ];
 
 // 2. Length targets (100–600 range)
@@ -344,21 +412,41 @@ async function generateWithAI(
 async function getFallbackTemplate(
   courseTagId: string,
   starRating: number,
-  userStatus?: 'pursuing' | 'completed' | null
+  userStatus?: 'pursuing' | 'completed' | null,
+  reviewerType?: 'student' | 'parent' | null,
+  academyName?: string,
+  courseName?: string,
 ): Promise<string> {
+  // P6: Weighted selection with usage decay — prefer less-used, higher-weight templates
   const rows = await sql`
-    SELECT template_text
+    SELECT id, template_text
     FROM fallback_templates
     WHERE (course_tag_id = ${courseTagId} OR course_tag_id IS NULL)
       AND star_rating = ${starRating}
       AND (user_status = ${userStatus ?? null} OR user_status IS NULL)
+      AND (reviewer_type = ${reviewerType ?? null} OR reviewer_type IS NULL)
       AND is_active = true
-    ORDER BY
-      CASE WHEN course_tag_id IS NOT NULL THEN 0 ELSE 1 END,
-      RANDOM()
+    ORDER BY (weight * RANDOM()) / (1 + LN(1 + usage_count)) DESC
     LIMIT 1
   `;
-  return rows.length > 0 ? rows[0].template_text : 'Great experience at the academy!';
+
+  if (rows.length === 0) {
+    return 'Great experience at the academy!';
+  }
+
+  // Update usage tracking
+  await sql`
+    UPDATE fallback_templates
+    SET usage_count = usage_count + 1, last_used_at = NOW()
+    WHERE id = ${rows[0].id}
+  `.catch(() => {});
+
+  // P3+P5: Token substitution for {academy_name} and {course_name}
+  let text = rows[0].template_text;
+  if (academyName) text = text.replace(/\{academy_name\}/g, academyName);
+  if (courseName) text = text.replace(/\{course_name\}/g, courseName);
+
+  return text;
 }
 
 export async function POST(request: NextRequest) {
@@ -380,13 +468,27 @@ export async function POST(request: NextRequest) {
 
     recordRequest(ipHash);
 
-    const configRows = await sql`SELECT value FROM system_config WHERE key = 'academy_name'`;
-    const academyName = configRows.length > 0 ? configRows[0].value : 'Our Academy';
+    const configRows = await sql`SELECT key, value FROM system_config WHERE key IN ('academy_name', 'academy_aliases')`;
+    let academyName = 'Our Academy';
+    let academyAliases: string[] = [];
+    for (const row of configRows) {
+      if (row.key === 'academy_name') academyName = row.value;
+      if (row.key === 'academy_aliases') {
+        try { academyAliases = JSON.parse(row.value); } catch { academyAliases = []; }
+      }
+    }
+    // P5: Pick random academy alias (include primary name in pool)
+    const academyPool = [academyName, ...academyAliases].filter(Boolean);
+    const displayAcademyName = pick(academyPool);
 
-    const courseRows = await sql`SELECT name, course_type, faculty_names FROM course_tags WHERE id = ${course_tag_id}`;
-    const courseName = courseRows.length > 0 ? courseRows[0].name : 'General';
+    const courseRows = await sql`SELECT name, course_type, faculty_names, aliases FROM course_tags WHERE id = ${course_tag_id}`;
+    const coursePrimaryName = courseRows.length > 0 ? courseRows[0].name : 'General';
     const courseType = courseRows.length > 0 ? (courseRows[0].course_type || 'other') : 'other';
     const facultyNames = courseRows.length > 0 ? (courseRows[0].faculty_names || '') : '';
+    const courseAliases: string[] = courseRows.length > 0 ? (courseRows[0].aliases || []) : [];
+    // P3: Pick random course alias (include primary name in pool)
+    const coursePool = [coursePrimaryName, ...courseAliases].filter(Boolean);
+    const displayCourseName = pick(coursePool);
     const courseStatus = user_status || 'pursuing';
     const role = reviewer_type || 'student';
 
@@ -394,10 +496,10 @@ export async function POST(request: NextRequest) {
     let reviewProvider: string;
 
     try {
-      review = await generateWithAI(academyName, courseName, courseType, facultyNames, courseStatus, role);
+      review = await generateWithAI(displayAcademyName, displayCourseName, courseType, facultyNames, courseStatus, role);
       reviewProvider = (process.env.AI_PROVIDER || 'gemini').toLowerCase();
     } catch (error) {
-      review = await getFallbackTemplate(course_tag_id, star_rating, user_status);
+      review = await getFallbackTemplate(course_tag_id, star_rating, user_status, reviewer_type, displayAcademyName, displayCourseName);
       reviewProvider = 'fallback';
     }
 

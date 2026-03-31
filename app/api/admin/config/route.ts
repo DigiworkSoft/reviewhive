@@ -21,6 +21,7 @@ export async function GET() {
 const ALLOWED_KEYS = [
   'google_review_url', 'whatsapp_number',
   'academy_name', 'logo_url', 'poster_tagline', 'poster_color', 'ai_enabled',
+  'academy_aliases',
 ];
 
 const updateSchema = z.object({

@@ -9,6 +9,7 @@ const updateSchema = z.object({
   description: z.string().max(500).optional(),
   course_type: z.enum(COURSE_TYPES).optional(),
   faculty_names: z.string().max(255).optional().nullable(),
+  aliases: z.array(z.string().max(100)).max(10).optional(),
   display_order: z.number().int().min(0).optional(),
   is_active: z.boolean().optional(),
 });
@@ -27,7 +28,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid request body', details: parsed.error.issues }, { status: 400 });
     }
 
-    const { name, description, course_type, faculty_names, display_order, is_active } = parsed.data;
+    const { name, description, course_type, faculty_names, aliases, display_order, is_active } = parsed.data;
 
     const rows = await sql`
       UPDATE course_tags
@@ -36,11 +37,12 @@ export async function PUT(
         description = COALESCE(${description ?? null}, description),
         course_type = COALESCE(${course_type ?? null}, course_type),
         faculty_names = ${faculty_names === undefined ? sql`faculty_names` : faculty_names},
+        aliases = ${aliases === undefined ? sql`aliases` : aliases},
         display_order = COALESCE(${display_order ?? null}, display_order),
         is_active = COALESCE(${is_active ?? null}, is_active),
         updated_at = NOW()
       WHERE id = ${id}
-      RETURNING id, name, description, course_type, faculty_names, display_order, is_active
+      RETURNING id, name, description, course_type, faculty_names, aliases, display_order, is_active
     `;
 
     if (rows.length === 0) {

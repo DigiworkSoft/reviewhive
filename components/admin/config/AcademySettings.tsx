@@ -34,10 +34,16 @@ function ConfigField({ label, value, maxLen, savedKey, configKey, onChange, onSa
 export function AcademySettings() {
   const [config, setConfig] = useState<Record<string, string>>({});
   const [savedKey, setSavedKey] = useState('');
+  const [academyAliases, setAcademyAliases] = useState<string[]>([]);
+  const [aliasInput, setAliasInput] = useState('');
 
   const load = useCallback(async () => {
     const res = await fetch('/api/admin/config');
-    if (res.ok) setConfig(await res.json());
+    if (res.ok) {
+      const data = await res.json();
+      setConfig(data);
+      try { setAcademyAliases(JSON.parse(data.academy_aliases || '[]')); } catch { setAcademyAliases([]); }
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -72,6 +78,69 @@ export function AcademySettings() {
   return (
     <div className="space-y-4">
       <ConfigField label="Academy Name" configKey="academy_name" value={config.academy_name || ''} savedKey={savedKey} onChange={handleChange} onSave={save} />
+      
+      {/* P5: Academy Name Aliases */}
+      <div className="rounded-lg border bg-white p-4">
+        <label className="mb-1 block text-sm font-medium text-gray-700">Academy Name Aliases</label>
+        <p className="mb-3 text-xs text-gray-500">Different ways users refer to your academy. A random alias is used in each review for natural variety.</p>
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {academyAliases.map((alias, i) => (
+            <span key={i} className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-700">
+              {alias}
+              <button
+                type="button"
+                onClick={async () => {
+                  const updated = academyAliases.filter((_, idx) => idx !== i);
+                  setAcademyAliases(updated);
+                  await save('academy_aliases', JSON.stringify(updated));
+                }}
+                className="ml-0.5 text-purple-400 hover:text-purple-700"
+              >×</button>
+            </span>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <input
+            value={aliasInput}
+            onChange={(e) => setAliasInput(e.target.value)}
+            onKeyDown={async (e) => {
+              if (e.key === 'Enter' && aliasInput.trim() && academyAliases.length < 10) {
+                e.preventDefault();
+                const val = aliasInput.trim();
+                if (!academyAliases.includes(val)) {
+                  const updated = [...academyAliases, val];
+                  setAcademyAliases(updated);
+                  await save('academy_aliases', JSON.stringify(updated));
+                }
+                setAliasInput('');
+              }
+            }}
+            placeholder="e.g. NSG, NSG Classes, NSG Coaching (press Enter)"
+            className="flex-1 rounded-lg border px-3 py-2.5 text-sm"
+            disabled={academyAliases.length >= 10}
+          />
+          <button
+            type="button"
+            onClick={async () => {
+              if (aliasInput.trim() && academyAliases.length < 10) {
+                const val = aliasInput.trim();
+                if (!academyAliases.includes(val)) {
+                  const updated = [...academyAliases, val];
+                  setAcademyAliases(updated);
+                  await save('academy_aliases', JSON.stringify(updated));
+                }
+                setAliasInput('');
+              }
+            }}
+            className="rounded-lg border px-3 py-2.5 text-xs text-gray-600 hover:bg-gray-50"
+            disabled={academyAliases.length >= 10}
+          >Add</button>
+        </div>
+        {academyAliases.length < 5 && academyAliases.length > 0 && (
+          <p className="mt-1 text-xs text-amber-600">Recommended: at least 5 aliases for best results</p>
+        )}
+        {savedKey === 'academy_aliases' && <p className="mt-1 text-sm text-green-600">✓ Saved</p>}
+      </div>
       
       {/* Read-only Review Page URL */}
       <div className="rounded-lg border bg-blue-50/50 p-4 border-blue-100">

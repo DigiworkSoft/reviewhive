@@ -8,6 +8,7 @@ interface Tag {
   description: string | null;
   course_type: string | null;
   faculty_names: string | null;
+  aliases: string[] | null;
   display_order: number;
   is_active: boolean;
 }
@@ -41,6 +42,7 @@ export function CourseTagTable({ tags, onEdit, onDeactivate, onReactivate, showI
               <th className="px-4 py-2">Name</th>
               <th className="px-4 py-2">Type</th>
               <th className="px-4 py-2">Faculty</th>
+              <th className="px-4 py-2">Aliases</th>
               <th className="px-4 py-2">Status</th>
               <th className="px-4 py-2 text-right">Actions</th>
             </tr>
@@ -52,6 +54,13 @@ export function CourseTagTable({ tags, onEdit, onDeactivate, onReactivate, showI
                 <td className="px-4 py-2.5 font-medium text-gray-800">{tag.name}</td>
                 <td className="px-4 py-2.5 text-gray-500 capitalize">{tag.course_type?.replace('_', ' ') || '—'}</td>
                 <td className="px-4 py-2.5 text-gray-500">{tag.faculty_names || '—'}</td>
+                <td className="px-4 py-2.5 text-gray-500">
+                  {tag.aliases && tag.aliases.length > 0 ? (
+                    <span className="text-xs" title={tag.aliases.join(', ')}>{tag.aliases.length} alias{tag.aliases.length !== 1 ? 'es' : ''}</span>
+                  ) : (
+                    <span className="text-xs text-amber-500">None</span>
+                  )}
+                </td>
                 <td className="px-4 py-2.5">
                   <Badge variant={tag.is_active ? 'secondary' : 'outline'} className="text-xs">
                     {tag.is_active ? 'Active' : 'Inactive'}
@@ -68,7 +77,7 @@ export function CourseTagTable({ tags, onEdit, onDeactivate, onReactivate, showI
               </tr>
             ))}
             {displayed.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-6 text-center text-gray-400">No course tags</td></tr>
+              <tr><td colSpan={7} className="px-4 py-6 text-center text-gray-400">No course tags</td></tr>
             )}
           </tbody>
         </table>
