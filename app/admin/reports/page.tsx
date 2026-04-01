@@ -8,32 +8,19 @@ export default function ReportsPage() {
   const [month, setMonth] = useState('');
   const [pdfLoading, setPdfLoading] = useState(false);
 
-  const handleCsvExport = async () => {
+  const handleCsvExport = () => {
     if (!from || !to) return alert('Please select both dates');
-    const res = await fetch(`/api/admin/export/csv?from=${from}&to=${to}`);
-    if (!res.ok) return alert('Export failed');
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `reviews-export-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    // Navigate directly — WebView DownloadListener handles Content-Disposition: attachment
+    window.location.href = `/api/admin/export/csv?from=${from}&to=${to}`;
   };
 
-  const handlePdfExport = async () => {
+  const handlePdfExport = () => {
     if (!month) return alert('Please select a month');
     setPdfLoading(true);
-    const res = await fetch(`/api/admin/export/pdf?month=${month}`);
-    setPdfLoading(false);
-    if (!res.ok) return alert('PDF generation failed');
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `review-report-${month}.pdf`;
-    a.click();
-    URL.revokeObjectURL(url);
+    // Navigate directly — WebView DownloadListener handles Content-Disposition: attachment
+    window.location.href = `/api/admin/export/pdf?month=${month}`;
+    // Reset loading after a short delay since we can't track the download completion
+    setTimeout(() => setPdfLoading(false), 3000);
   };
 
   return (

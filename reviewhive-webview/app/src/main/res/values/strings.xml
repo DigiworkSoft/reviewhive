@@ -1,0 +1,14 @@
+<resources>
+
+    <string name="app_name">reviewhive-webview</string>
+
+    <!-- Base Emulator URL for WebView -->
+    <!--    <string name="base_url">http://10.0.2.2:3000</string>-->
+
+    <!-- Base LAN URL for WebView -->
+    <!-- <string name="base_url">http://192.168.0.132:3000/review</string> -->
+
+    <!-- Base CLOUD URL for WebView -->
+    <string name="base_url">https://review.nsgacademy.in/</string>
+
+</resources>

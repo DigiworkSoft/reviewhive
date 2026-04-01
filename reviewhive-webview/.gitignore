@@ -1,0 +1,35 @@
+# Built output - MOST IMPORTANT
+/build
+app/build/
+
+# Gradle
+.gradle
+gradle/wrapper/gradle-wrapper.jar
+
+# Local config (machine-specific, never commit)
+local.properties
+
+# IDE - Android Studio / IntelliJ
+*.iml
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/deploymentTargetSelector.xml
+.idea/AndroidProjectSystem.xml
+
+# macOS
+.DS_Store
+
+# Native build (not relevant for WebView but good to keep)
+.externalNativeBuild
+.cxx
+
+# Captures (profiler/screenshots from Android Studio)
+/captures
+
+# Keystore - NEVER commit your signing keys
+*.jks
+*.keystore

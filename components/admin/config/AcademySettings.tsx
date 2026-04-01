@@ -36,6 +36,7 @@ export function AcademySettings() {
   const [savedKey, setSavedKey] = useState('');
   const [academyAliases, setAcademyAliases] = useState<string[]>([]);
   const [aliasInput, setAliasInput] = useState('');
+  const [origin, setOrigin] = useState('...');
 
   const load = useCallback(async () => {
     const res = await fetch('/api/admin/config');
@@ -46,7 +47,7 @@ export function AcademySettings() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); setOrigin(window.location.origin); }, [load]);
 
   const save = async (key: string, value: string) => {
     await fetch('/api/admin/config', {
@@ -148,18 +149,37 @@ export function AcademySettings() {
         <p className="text-xs text-blue-600 mb-2 italic">This is the link your customers scan from the QR code.</p>
         <div className="flex items-center gap-2">
             <code className="flex-1 bg-white border border-blue-100 rounded px-3 py-2 text-sm text-gray-700 font-mono">
-                {typeof window !== 'undefined' ? `${window.location.origin}/review` : '.../review'}
+                {`${origin}/review`}
             </code>
             <button 
                 onClick={() => {
                     if (typeof window !== 'undefined') {
-                        navigator.clipboard.writeText(`${window.location.origin}/review?src=qr`);
-                        alert('Link copied!');
+                        const link = `${window.location.origin}/review?src=qr`;
+                        // Robust copy: clipboard API with execCommand fallback
+                        const fallbackCopy = (val: string) => {
+                            const textArea = document.createElement('textarea');
+                            textArea.value = val;
+                            textArea.style.position = 'fixed';
+                            textArea.style.left = '-9999px';
+                            textArea.style.top = '0';
+                            document.body.appendChild(textArea);
+                            textArea.focus();
+                            textArea.select();
+                            try { document.execCommand('copy'); } catch { /* ignore */ }
+                            document.body.removeChild(textArea);
+                        };
+                        if (navigator.clipboard && window.isSecureContext) {
+                            navigator.clipboard.writeText(link).catch(() => fallbackCopy(link));
+                        } else {
+                            fallbackCopy(link);
+                        }
+                        setSavedKey('copy_link');
+                        setTimeout(() => setSavedKey(''), 2000);
                     }
                 }}
                 className="text-xs bg-blue-100 text-blue-700 px-3 py-2 rounded font-medium hover:bg-blue-200"
             >
-                Copy Link
+                {savedKey === 'copy_link' ? '✓ Copied!' : 'Copy Link'}
             </button>
         </div>
       </div>

@@ -5,6 +5,7 @@ import sql from '@/lib/db';
 export async function GET(request: NextRequest) {
   try {
     const format = request.nextUrl.searchParams.get('format') || 'png';
+    const inline = request.nextUrl.searchParams.get('inline') === 'true';
 
     const rows = await sql`
       SELECT value FROM system_config WHERE key = 'google_review_url'
@@ -23,12 +24,9 @@ export async function GET(request: NextRequest) {
         margin: 2,
         color: { dark: '#000000', light: '#00000000' },
       });
-      return new NextResponse(svgString, {
-        headers: {
-          'Content-Type': 'image/svg+xml',
-          'Content-Disposition': 'attachment; filename="qr-code.svg"',
-        },
-      });
+      const svgHeaders: Record<string, string> = { 'Content-Type': 'image/svg+xml' };
+      if (!inline) svgHeaders['Content-Disposition'] = 'attachment; filename="qr-code.svg"';
+      return new NextResponse(svgString, { headers: svgHeaders });
     }
 
     // PNG — use toDataURL and strip the data URL prefix
@@ -39,12 +37,9 @@ export async function GET(request: NextRequest) {
     });
     const base64 = dataUrl.replace(/^data:image\/png;base64,/, '');
     const pngBuffer = Buffer.from(base64, 'base64');
-    return new NextResponse(pngBuffer, {
-      headers: {
-        'Content-Type': 'image/png',
-        'Content-Disposition': 'attachment; filename="qr-code.png"',
-      },
-    });
+    const pngHeaders: Record<string, string> = { 'Content-Type': 'image/png' };
+    if (!inline) pngHeaders['Content-Disposition'] = 'attachment; filename="qr-code.png"';
+    return new NextResponse(pngBuffer, { headers: pngHeaders });
   } catch (error) {
     console.error('QR download error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

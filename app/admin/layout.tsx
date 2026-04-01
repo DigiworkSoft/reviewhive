@@ -17,8 +17,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="hidden md:flex md:sticky md:top-0 md:h-screen">
         <AdminSidebar />
       </div>
-      <main className="flex-1 min-w-0 pb-16 md:pb-0">{children}</main>
-      <AdminBottomNav />
+      {/* Mobile: flex column so nav stays anchored, only main scrolls */}
+      <div className="flex flex-1 flex-col min-w-0 md:block">
+        <main className="flex-1 overflow-y-auto min-w-0 md:pb-0">{children}</main>
+        <AdminBottomNav />
+      </div>
     </div>
   );
 }

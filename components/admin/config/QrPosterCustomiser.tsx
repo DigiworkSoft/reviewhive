@@ -5,17 +5,19 @@ import { useState, useEffect, useCallback } from 'react';
 export function QrPosterCustomiser() {
   const [color, setColor] = useState('#1a1a2e');
   const [tagline, setTagline] = useState('');
-  const [previewTs, setPreviewTs] = useState(0);
+  const [academyName, setAcademyName] = useState('Academy');
+  const [logoUrl, setLogoUrl] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setPreviewTs(Date.now());
     (async () => {
       const res = await fetch('/api/admin/config');
       if (res.ok) {
         const cfg = await res.json();
         if (cfg.poster_color) setColor(cfg.poster_color);
         if (cfg.poster_tagline) setTagline(cfg.poster_tagline);
+        if (cfg.academy_name) setAcademyName(cfg.academy_name);
+        if (cfg.logo_url) setLogoUrl(cfg.logo_url);
       }
     })();
   }, []);
@@ -27,7 +29,6 @@ export function QrPosterCustomiser() {
       body: JSON.stringify({ key, value }),
     });
     setSaving(false);
-    setPreviewTs(Date.now());
   }, []);
 
   return (
@@ -71,15 +72,54 @@ export function QrPosterCustomiser() {
           {saving && <p className="text-xs text-blue-500">Saving...</p>}
         </div>
 
-        {/* Live Preview */}
+        {/* Client-side HTML/CSS Preview (replaces iframe PDF preview) */}
         <div className="rounded-lg border bg-gray-50 p-2">
           <p className="mb-2 text-center text-xs font-medium text-gray-500">Live Preview</p>
-          <iframe
-            key={previewTs}
-            src={`/api/qr/poster?preview=true&t=${previewTs}`}
-            className="h-[500px] w-full rounded border bg-white"
-            title="Poster Preview"
-          />
+          <div
+            className="relative mx-auto bg-white rounded border overflow-hidden"
+            style={{ aspectRatio: '210 / 297', maxWidth: '100%' }}
+          >
+            {/* Decorative border */}
+            <div
+              className="absolute rounded-lg"
+              style={{
+                top: '3%', left: '3%', right: '3%', bottom: '3%',
+                border: `3px solid ${color}`,
+                borderRadius: '12px',
+                pointerEvents: 'none',
+              }}
+            />
+            {/* Content */}
+            <div className="flex flex-col items-center justify-center h-full px-[10%] py-[8%] text-center">
+              {logoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt="Logo" className="h-12 w-12 rounded-lg object-cover mb-3" />
+              )}
+              <div
+                className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 leading-tight"
+                style={{ color }}
+              >
+                {academyName}
+              </div>
+              <div className="text-xs sm:text-sm text-gray-500 mb-6">
+                {tagline || 'Share your experience!'}
+              </div>
+              {/* Actual QR code from API (inline=true avoids triggering WebView download) */}
+              <div
+                className="w-[40%] aspect-square rounded-lg mb-6 flex items-center justify-center overflow-hidden"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/api/qr/download?format=png&inline=true"
+                  alt="QR Code"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div className="text-xs text-gray-500">
+                Scan the QR code to leave a review
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

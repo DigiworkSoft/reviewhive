@@ -64,7 +64,7 @@ export function AdminBottomNav() {
       {menuOpen && (
         <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setMenuOpen(false)} />
       )}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.06)] md:hidden" ref={menuRef}>
+      <nav className="sticky bottom-0 left-0 right-0 z-50 border-t bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.06)] md:hidden" ref={menuRef} style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {menuOpen && (
           <div className="absolute bottom-full left-0 right-0 border-t bg-white px-2 py-2 shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
             {moreItems.map((item) => {
