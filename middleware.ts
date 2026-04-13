@@ -14,8 +14,13 @@ export async function middleware(request: NextRequest) {
     '/admin/reset-password',
     '/api/admin/auth',
     '/api/admin/auth/forgot-password',
-    '/api/admin/auth/reset-password'
+    '/api/admin/auth/reset-password',
   ];
+
+  // Allow Google OAuth callback (needs to process before auth)
+  if (pathname === '/api/admin/auto-reply/google/callback') {
+    return NextResponse.next();
+  }
 
   if (publicPaths.includes(pathname)) {
     return NextResponse.next();

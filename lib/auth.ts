@@ -15,7 +15,7 @@ export async function signJwt(payload: { sub: string; email: string }): Promise<
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('1h')
+    .setExpirationTime('15m')
     .sign(JWT_SECRET);
 }
 

@@ -15,6 +15,7 @@ import {
   User,
   LogOut,
   X,
+  MessageSquareReply,
 } from 'lucide-react';
 
 const primaryItems = [
@@ -25,6 +26,7 @@ const primaryItems = [
 
 const moreItems = [
   { href: '/admin/fallback-templates', label: 'Templates', icon: FileText },
+  { href: '/admin/auto-reply', label: 'Auto-Reply', icon: MessageSquareReply },
   { href: '/admin/reports', label: 'Reports', icon: FileBarChart },
   { href: '/admin/audit-log', label: 'Audit Log', icon: ClipboardList },
   { href: '/admin/profile', label: 'Profile', icon: User },

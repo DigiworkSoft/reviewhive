@@ -22,6 +22,8 @@ const ALLOWED_KEYS = [
   'google_review_url', 'whatsapp_number',
   'academy_name', 'logo_url', 'poster_tagline', 'poster_color', 'ai_enabled',
   'academy_aliases',
+  'autoreply_enabled', 'autoreply_star_threshold', 'autoreply_tone',
+  'autoreply_delay_min', 'autoreply_delay_max',
 ];
 
 const updateSchema = z.object({

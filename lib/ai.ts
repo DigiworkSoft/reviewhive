@@ -1,12 +1,16 @@
 /**
- * Provider-Agnostic AI Abstraction Layer
+ * Multi-Provider AI Abstraction Layer
  *
- * Supported providers (set via AI_PROVIDER env variable):
- *   - "gemini"  → uses GEMINI_API_KEY + AI_MODEL (e.g. gemini-2.5-flash)
- *   - "openai"  → uses OPENAI_API_KEY + AI_MODEL (e.g. gpt-4o-mini)
+ * All configured providers are available. System tries them in order.
+ * If one fails, automatically switches to the next available provider.
  *
- * To switch providers, ONLY change .env.local / Vercel env variables.
- * Zero code changes required!
+ * Configure via env variables:
+ *   AI_PROVIDERS  → comma-separated list, e.g. "gemini,openai" (order = preference)
+ *   GEMINI_API_KEY → enables Gemini
+ *   OPENAI_API_KEY → enables OpenAI
+ *   AI_MODEL       → override model name (optional, per-provider defaults used)
+ *
+ * Add more providers by adding a generate function + registering in PROVIDERS map.
  */
 
 export interface AIOptions {
@@ -14,15 +18,40 @@ export interface AIOptions {
   systemMessage?: string;
 }
 
-export async function generateText(prompt: string, options?: AIOptions): Promise<string> {
-  const provider = (process.env.AI_PROVIDER || 'gemini').toLowerCase();
+type ProviderFn = (prompt: string, options?: AIOptions) => Promise<string>;
 
-  if (provider === 'openai') {
-    return generateWithOpenAI(prompt, options);
+const PROVIDERS: Record<string, { fn: ProviderFn; isAvailable: () => boolean }> = {
+  gemini: { fn: generateWithGemini, isAvailable: () => !!process.env.GEMINI_API_KEY },
+  openai: { fn: generateWithOpenAI, isAvailable: () => !!process.env.OPENAI_API_KEY },
+};
+
+function getProviderOrder(): string[] {
+  const configured = process.env.AI_PROVIDERS;
+  if (configured) {
+    return configured.split(',').map(p => p.trim().toLowerCase());
+  }
+  return Object.keys(PROVIDERS);
+}
+
+export async function generateText(prompt: string, options?: AIOptions): Promise<string> {
+  const order = getProviderOrder();
+  const available = order.filter(p => PROVIDERS[p]?.isAvailable());
+
+  if (available.length === 0) {
+    throw new Error('No AI providers configured. Set GEMINI_API_KEY or OPENAI_API_KEY.');
   }
 
-  // Default: Gemini
-  return generateWithGemini(prompt, options);
+  for (let i = 0; i < available.length; i++) {
+    try {
+      return await PROVIDERS[available[i]].fn(prompt, options);
+    } catch (error) {
+      const isLast = i === available.length - 1;
+      if (isLast) throw error;
+      console.warn(`AI provider "${available[i]}" failed, trying "${available[i + 1]}"...`);
+    }
+  }
+
+  throw new Error('All AI providers failed.');
 }
 
 // ── Gemini ─────────────────────────────────────────────────────────────────

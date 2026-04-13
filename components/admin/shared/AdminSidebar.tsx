@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Tag, FileText, Settings, QrCode, FileBarChart, ClipboardList, LogOut, User } from 'lucide-react';
+import { LayoutDashboard, Tag, FileText, Settings, QrCode, FileBarChart, ClipboardList, LogOut, User, MessageSquareReply } from 'lucide-react';
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/course-tags', label: 'Course Tags', icon: Tag },
   { href: '/admin/fallback-templates', label: 'Templates', icon: FileText },
+  { href: '/admin/auto-reply', label: 'Auto-Reply', icon: MessageSquareReply },
   { href: '/admin/reports', label: 'Reports', icon: FileBarChart },
   { href: '/admin/config', label: 'Configuration', icon: Settings },
   { href: '/admin/audit-log', label: 'Audit Log', icon: ClipboardList },
