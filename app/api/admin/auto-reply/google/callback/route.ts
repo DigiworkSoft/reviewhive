@@ -11,18 +11,18 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error('Google OAuth error:', error);
-    return NextResponse.redirect(`${baseUrl}/admin/auto-reply?error=google_denied`);
+    return NextResponse.redirect(`${baseUrl}/admin/auto-reply/settings?error=google_denied`);
   }
 
   if (!code) {
-    return NextResponse.redirect(`${baseUrl}/admin/auto-reply?error=no_code`);
+    return NextResponse.redirect(`${baseUrl}/admin/auto-reply/settings?error=no_code`);
   }
 
   try {
     const tokens = await exchangeCodeForTokens(code);
 
     if (!tokens.refresh_token) {
-      return NextResponse.redirect(`${baseUrl}/admin/auto-reply?error=no_refresh_token`);
+      return NextResponse.redirect(`${baseUrl}/admin/auto-reply/settings?error=no_refresh_token`);
     }
 
     const expiresAt = Date.now() + tokens.expires_in * 1000;
@@ -51,9 +51,9 @@ export async function GET(request: NextRequest) {
       VALUES (${tokens.access_token}, ${tokens.refresh_token}, ${expiresAt}, ${accountName}, ${locationName}, ${locationTitle})
     `;
 
-    return NextResponse.redirect(`${baseUrl}/admin/auto-reply?success=google_connected`);
+    return NextResponse.redirect(`${baseUrl}/admin/auto-reply/settings?success=google_connected`);
   } catch (err) {
     console.error('Google callback error:', err);
-    return NextResponse.redirect(`${baseUrl}/admin/auto-reply?error=google_failed`);
+    return NextResponse.redirect(`${baseUrl}/admin/auto-reply/settings?error=google_failed`);
   }
 }
