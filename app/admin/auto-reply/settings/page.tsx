@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, XCircle } from 'lucide-react';
 import { AutoReplySettings } from '@/components/admin/auto-reply/AutoReplySettings';
@@ -12,7 +12,7 @@ interface GoogleStatus {
   location_title?: string;
 }
 
-export default function AutoReplySettingsPage() {
+function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [googleStatus, setGoogleStatus] = useState<GoogleStatus>({ connected: false });
@@ -92,5 +92,13 @@ export default function AutoReplySettingsPage() {
         onDisconnectGoogle={disconnectGoogle}
       />
     </div>
+  );
+}
+
+export default function AutoReplySettingsPage() {
+  return (
+    <Suspense>
+      <SettingsContent />
+    </Suspense>
   );
 }
