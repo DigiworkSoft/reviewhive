@@ -15,16 +15,19 @@ const geistMono = Geist_Mono({
 
 export async function generateMetadata(): Promise<Metadata> {
   let academyName = "ReviewHive";
-  try {
-    const rows = await sql`
-      SELECT key, value FROM system_config
-      WHERE key IN ('academy_name')
-    `;
-    for (const row of rows) {
-      if (row.key === "academy_name" && row.value) academyName = row.value;
+  // Skip DB query during build phase to avoid Vercel static generation timeouts
+  if (process.env.NEXT_PHASE !== "phase-production-build") {
+    try {
+      const rows = await sql`
+        SELECT key, value FROM system_config
+        WHERE key IN ('academy_name')
+      `;
+      for (const row of rows) {
+        if (row.key === "academy_name" && row.value) academyName = row.value;
+      }
+    } catch {
+      // fallback to defaults
     }
-  } catch {
-    // fallback to defaults
   }
 
   return {
