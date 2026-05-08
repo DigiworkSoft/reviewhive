@@ -23,6 +23,8 @@ interface Review {
   status: 'pending' | 'approved' | 'rejected' | 'posted' | 'skipped';
   ai_suggested_reply: string | null;
   final_reply: string | null;
+  review_date: string | null;
+  replied_at: string | null;
 }
 
 interface Props {
@@ -88,6 +90,11 @@ export function ReviewCard({ review, onGenerate, onAction, onDelete, googleConne
             ))}
           </div>
           <Badge variant="outline" className={`text-[10px] ${badge.className}`}>{badge.label}</Badge>
+          {review.review_date && (
+            <span className="text-[10px] text-gray-400">
+              Reviewed: {new Date(review.review_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1">
           <button onClick={() => setEditing(true)} disabled={busy} className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50" title="Edit">
@@ -126,9 +133,16 @@ export function ReviewCard({ review, onGenerate, onAction, onDelete, googleConne
             ? 'border-blue-100 bg-blue-50 text-blue-800'
             : 'border-gray-100 bg-gray-50 text-gray-700'
         }`}>
-          <span className="mb-1 block text-xs font-medium text-gray-400">
-            {review.status === 'posted' ? '✅ Posted Reply' : 'AI Reply'}
-          </span>
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-xs font-medium text-gray-400">
+              {review.status === 'posted' ? '✅ Posted Reply' : 'AI Reply'}
+            </span>
+            {review.replied_at && (
+              <span className="text-[10px] text-gray-400">
+                Replied: {new Date(review.replied_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
+            )}
+          </div>
           {displayReply}
         </div>
       ) : null}

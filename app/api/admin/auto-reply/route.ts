@@ -10,6 +10,8 @@ interface ReviewRow {
   status: string;
   ai_suggested_reply: string | null;
   final_reply: string | null;
+  review_date: string | null;
+  replied_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -47,6 +49,7 @@ export async function GET(request: NextRequest) {
       reviews = await sql<ReviewRow[]>`
         SELECT id, google_review_id AS review_id, reviewer_name, review_text, star_rating AS rating,
                reply_status AS status, NULL AS ai_suggested_reply, NULL AS final_reply,
+               review_date, NULL::timestamptz AS replied_at,
                created_at, updated_at
         FROM google_reviews
         ORDER BY created_at DESC
@@ -57,6 +60,7 @@ export async function GET(request: NextRequest) {
       reviews = await sql<ReviewRow[]>`
         SELECT id, google_review_id AS review_id, reviewer_name, review_text, star_rating AS rating,
                reply_status AS status, NULL AS ai_suggested_reply, NULL AS final_reply,
+               review_date, NULL::timestamptz AS replied_at,
                created_at, updated_at
         FROM google_reviews
         WHERE reply_status = ${status}
@@ -69,7 +73,7 @@ export async function GET(request: NextRequest) {
     // Attach latest reply text for each review
     for (const r of reviews) {
       const replies = await sql`
-        SELECT reply_text, status FROM review_replies
+        SELECT reply_text, status, posted_at FROM review_replies
         WHERE google_review_id = ${r.id}
         ORDER BY created_at DESC LIMIT 1
       `;
@@ -79,6 +83,7 @@ export async function GET(request: NextRequest) {
         } else {
           r.final_reply = replies[0].reply_text;
         }
+        r.replied_at = replies[0].posted_at || null;
       }
     }
 

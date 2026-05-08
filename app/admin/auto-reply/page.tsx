@@ -31,6 +31,8 @@ interface ReviewItem {
   status: ReviewStatus;
   ai_suggested_reply: string | null;
   final_reply: string | null;
+  review_date: string | null;
+  replied_at: string | null;
   created_at: string;
   updated_at: string;
 }
