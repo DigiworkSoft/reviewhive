@@ -18,6 +18,7 @@ type SettingsState = {
   autoreply_delay_min: string;
   autoreply_delay_max: string;
   autoreply_sync_from_date: string;
+  autoreply_cron_interval: string;
 };
 
 const defaults: SettingsState = {
@@ -27,6 +28,7 @@ const defaults: SettingsState = {
   autoreply_delay_min: '0',
   autoreply_delay_max: '5',
   autoreply_sync_from_date: '',
+  autoreply_cron_interval: '60',
 };
 
 const toneOptions = [
@@ -235,6 +237,32 @@ export function AutoReplySettings({ googleStatus, onConnectGoogle, onDisconnectG
                 setTimeout(() => setSavedKey(null), 2000);
               } finally { setSavingKey(null); }
             }}
+          />
+        </div>
+      </div>
+
+      {/* Cron Frequency */}
+      <div className="rounded-xl border bg-white p-4">
+        <h3 className="text-sm font-semibold text-gray-700">Auto-Reply Frequency</h3>
+        <p className="text-xs text-gray-400">How often to check for new reviews and post replies</p>
+        <div className="mt-3 flex items-center justify-between">
+          <select
+            value={settings.autoreply_cron_interval}
+            onChange={(e) => setSettings((s) => ({ ...s, autoreply_cron_interval: e.target.value }))}
+            className="rounded-lg border px-3 py-1.5 text-sm text-gray-700"
+          >
+            <option value="15">Every 15 minutes</option>
+            <option value="30">Every 30 minutes</option>
+            <option value="60">Every 1 hour</option>
+            <option value="120">Every 2 hours</option>
+            <option value="360">Every 6 hours</option>
+            <option value="720">Every 12 hours</option>
+            <option value="1440">Once a day</option>
+          </select>
+          <SaveBtn
+            saving={savingKey === 'autoreply_cron_interval'}
+            saved={savedKey === 'autoreply_cron_interval'}
+            onClick={() => saveOne('autoreply_cron_interval', settings.autoreply_cron_interval)}
           />
         </div>
       </div>

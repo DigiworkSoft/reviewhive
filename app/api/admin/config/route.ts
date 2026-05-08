@@ -24,6 +24,7 @@ const ALLOWED_KEYS = [
   'academy_aliases',
   'autoreply_enabled', 'autoreply_star_threshold', 'autoreply_tone',
   'autoreply_delay_min', 'autoreply_delay_max', 'autoreply_sync_from_date',
+  'autoreply_cron_interval',
 ];
 
 const updateSchema = z.object({
