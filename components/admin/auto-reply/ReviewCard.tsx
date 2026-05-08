@@ -121,8 +121,14 @@ export function ReviewCard({ review, onGenerate, onAction, onDelete, googleConne
           </div>
         </div>
       ) : displayReply ? (
-        <div className="mt-3 rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm text-gray-700">
-          <span className="mb-1 block text-xs font-medium text-gray-400">AI Reply</span>
+        <div className={`mt-3 rounded-lg border p-3 text-sm ${
+          review.status === 'posted'
+            ? 'border-blue-100 bg-blue-50 text-blue-800'
+            : 'border-gray-100 bg-gray-50 text-gray-700'
+        }`}>
+          <span className="mb-1 block text-xs font-medium text-gray-400">
+            {review.status === 'posted' ? '✅ Posted Reply' : 'AI Reply'}
+          </span>
           {displayReply}
         </div>
       ) : null}

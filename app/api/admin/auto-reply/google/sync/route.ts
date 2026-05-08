@@ -52,18 +52,16 @@ export async function POST() {
       pageToken = data.nextPageToken;
 
       for (const review of data.reviews) {
-        // Skip reviews older than cutoff date (if configured)
-        if (syncFromDate) {
-          const reviewDate = new Date(review.createTime);
-          if (reviewDate < syncFromDate) {
-            skipped++;
-            continue;
-          }
+        const reviewDate = new Date(review.createTime);
+
+        // Skip reviews before cutoff date entirely (don't store)
+        if (syncFromDate && reviewDate < syncFromDate) {
+          skipped++;
+          continue;
         }
 
         const rating = starRatingToNumber(review.starRating);
         const hasReply = Boolean(review.reviewReply);
-        // If already replied on Google, mark as posted; otherwise pending
         const initialStatus = hasReply ? 'posted' : 'pending';
 
         const existing = await sql`
@@ -79,12 +77,26 @@ export async function POST() {
               star_rating = ${rating},
               review_date = ${review.createTime},
               has_existing_reply = ${hasReply},
+              reply_status = ${initialStatus},
               updated_at = NOW()
             WHERE google_review_id = ${review.reviewId}
           `;
+          // Save existing reply text if present
+          if (hasReply && review.reviewReply) {
+            const existingReply = await sql`
+              SELECT id FROM review_replies
+              WHERE google_review_id = ${existing[0].id} AND status = 'posted' LIMIT 1
+            `;
+            if (existingReply.length === 0) {
+              await sql`
+                INSERT INTO review_replies (google_review_id, reply_text, status, posted_at)
+                VALUES (${existing[0].id}, ${review.reviewReply.comment}, 'posted', ${review.reviewReply.updateTime})
+              `;
+            }
+          }
           updated++;
         } else {
-          await sql`
+          const inserted = await sql`
             INSERT INTO google_reviews (
               google_review_id, google_review_name, reviewer_name, reviewer_photo_url,
               review_text, star_rating, review_date, has_existing_reply, reply_status
@@ -98,8 +110,17 @@ export async function POST() {
               ${review.createTime},
               ${hasReply},
               ${initialStatus}
-            )
+            ) RETURNING id
           `;
+          // Save existing reply text for already-replied reviews
+          if (hasReply && review.reviewReply && inserted.length > 0) {
+            await sql`
+              INSERT INTO review_replies (google_review_id, reply_text, status, posted_at)
+              VALUES (${inserted[0].id}, ${review.reviewReply.comment}, 'posted', ${review.reviewReply.updateTime})
+            `;
+          }
+          imported++;
+        }
           imported++;
         }
       }
