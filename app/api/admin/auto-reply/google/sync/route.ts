@@ -121,8 +121,6 @@ export async function POST() {
           }
           imported++;
         }
-          imported++;
-        }
       }
     } while (pageToken);
 
