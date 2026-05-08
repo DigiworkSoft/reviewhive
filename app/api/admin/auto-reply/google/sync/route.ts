@@ -5,7 +5,7 @@ import { getValidAccessToken, fetchReviews, starRatingToNumber } from '@/lib/goo
 export async function POST() {
   try {
     const tokenRows = await sql`
-      SELECT id, access_token, refresh_token, expires_at, location_name FROM google_tokens LIMIT 1
+      SELECT id, access_token, refresh_token, expires_at, account_name, location_name FROM google_tokens LIMIT 1
     `;
 
     if (tokenRows.length === 0) {
@@ -16,6 +16,12 @@ export async function POST() {
     if (!token.location_name) {
       return NextResponse.json({ error: 'No location selected in Google token data' }, { status: 400 });
     }
+
+    if (!token.account_name) {
+      return NextResponse.json({ error: 'No account found in Google token data' }, { status: 400 });
+    }
+
+    const fullLocationPath = `${token.account_name}/${token.location_name}`;
 
     const valid = await getValidAccessToken(
       token.access_token, token.refresh_token, Number(token.expires_at),
@@ -33,7 +39,7 @@ export async function POST() {
     let updated = 0;
 
     do {
-      const data = await fetchReviews(valid.access_token, token.location_name, 50, pageToken);
+      const data = await fetchReviews(valid.access_token, fullLocationPath, 50, pageToken);
       pageToken = data.nextPageToken;
 
       for (const review of data.reviews) {
@@ -63,7 +69,7 @@ export async function POST() {
               review_text, star_rating, review_date, has_existing_reply, reply_status
             ) VALUES (
               ${review.reviewId},
-              ${`${token.location_name}/reviews/${review.reviewId}`},
+              ${`${fullLocationPath}/reviews/${review.reviewId}`},
               ${review.reviewer?.displayName || 'Anonymous'},
               ${review.reviewer?.profilePhotoUrl || null},
               ${review.comment || ''},
