@@ -18,7 +18,7 @@ async function loadConfig(): Promise<ConfigMap> {
       'autoreply_last_cron_run', 'academy_name'
     )
   `;
-  return Object.fromEntries(rows.map((r: { key: string; value: string }) => [r.key, r.value]));
+  return Object.fromEntries(rows.map((r) => [r.key, r.value]));
 }
 
 function sanitizeReply(text: string): string {
