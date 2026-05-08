@@ -17,6 +17,7 @@ type SettingsState = {
   autoreply_tone: string;
   autoreply_delay_min: string;
   autoreply_delay_max: string;
+  autoreply_sync_from_date: string;
 };
 
 const defaults: SettingsState = {
@@ -25,6 +26,7 @@ const defaults: SettingsState = {
   autoreply_tone: 'professional',
   autoreply_delay_min: '0',
   autoreply_delay_max: '5',
+  autoreply_sync_from_date: '',
 };
 
 const toneOptions = [
@@ -233,6 +235,25 @@ export function AutoReplySettings({ googleStatus, onConnectGoogle, onDisconnectG
                 setTimeout(() => setSavedKey(null), 2000);
               } finally { setSavingKey(null); }
             }}
+          />
+        </div>
+      </div>
+
+      {/* Sync From Date */}
+      <div className="rounded-xl border bg-white p-4">
+        <h3 className="text-sm font-semibold text-gray-700">Sync Reviews From</h3>
+        <p className="text-xs text-gray-400">Only sync Google reviews created on or after this date</p>
+        <div className="mt-3 flex items-center justify-between">
+          <input
+            type="date"
+            value={settings.autoreply_sync_from_date}
+            onChange={(e) => setSettings((s) => ({ ...s, autoreply_sync_from_date: e.target.value }))}
+            className="rounded-lg border px-3 py-1.5 text-sm text-gray-700"
+          />
+          <SaveBtn
+            saving={savingKey === 'autoreply_sync_from_date'}
+            saved={savedKey === 'autoreply_sync_from_date'}
+            onClick={() => saveOne('autoreply_sync_from_date', settings.autoreply_sync_from_date)}
           />
         </div>
       </div>

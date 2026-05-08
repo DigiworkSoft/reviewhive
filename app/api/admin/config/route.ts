@@ -23,7 +23,7 @@ const ALLOWED_KEYS = [
   'academy_name', 'logo_url', 'poster_tagline', 'poster_color', 'ai_enabled',
   'academy_aliases',
   'autoreply_enabled', 'autoreply_star_threshold', 'autoreply_tone',
-  'autoreply_delay_min', 'autoreply_delay_max',
+  'autoreply_delay_min', 'autoreply_delay_max', 'autoreply_sync_from_date',
 ];
 
 const updateSchema = z.object({

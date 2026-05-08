@@ -34,16 +34,37 @@ export async function POST() {
       `;
     }
 
+    // Read sync cutoff date from config
+    const configRows = await sql`
+      SELECT value FROM system_config WHERE key = 'autoreply_sync_from_date' LIMIT 1
+    `;
+    const syncFromDate = configRows.length > 0 && configRows[0].value
+      ? new Date(configRows[0].value)
+      : null;
+
     let pageToken: string | undefined;
     let imported = 0;
     let updated = 0;
+    let skipped = 0;
 
     do {
       const data = await fetchReviews(valid.access_token, fullLocationPath, 50, pageToken);
       pageToken = data.nextPageToken;
 
       for (const review of data.reviews) {
+        // Skip reviews older than cutoff date (if configured)
+        if (syncFromDate) {
+          const reviewDate = new Date(review.createTime);
+          if (reviewDate < syncFromDate) {
+            skipped++;
+            continue;
+          }
+        }
+
         const rating = starRatingToNumber(review.starRating);
+        const hasReply = Boolean(review.reviewReply);
+        // If already replied on Google, mark as posted; otherwise pending
+        const initialStatus = hasReply ? 'posted' : 'pending';
 
         const existing = await sql`
           SELECT id FROM google_reviews WHERE google_review_id = ${review.reviewId}
@@ -57,7 +78,7 @@ export async function POST() {
               review_text = ${review.comment || ''},
               star_rating = ${rating},
               review_date = ${review.createTime},
-              has_existing_reply = ${Boolean(review.reviewReply)},
+              has_existing_reply = ${hasReply},
               updated_at = NOW()
             WHERE google_review_id = ${review.reviewId}
           `;
@@ -75,8 +96,8 @@ export async function POST() {
               ${review.comment || ''},
               ${rating},
               ${review.createTime},
-              ${Boolean(review.reviewReply)},
-              'pending'
+              ${hasReply},
+              ${initialStatus}
             )
           `;
           imported++;
@@ -85,8 +106,8 @@ export async function POST() {
     } while (pageToken);
 
     return NextResponse.json({
-      success: true, imported, updated,
-      message: `Sync complete: ${imported} new, ${updated} updated`,
+      success: true, imported, updated, skipped,
+      message: `Sync complete: ${imported} new, ${updated} updated, ${skipped} skipped (before cutoff)`,
     });
   } catch (error) {
     console.error('Google sync error:', error);
