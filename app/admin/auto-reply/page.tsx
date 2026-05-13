@@ -228,7 +228,7 @@ export default function AutoReplyPage() {
             onClick={() => setShowAddModal(true)}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
-            + Add Review
+            + Manual Review
           </button>
           {googleStatus.connected && (
             <button
@@ -237,7 +237,7 @@ export default function AutoReplyPage() {
               className="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
             >
               <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? 'Syncing…' : 'Sync'}
+              {syncing ? 'Fetching…' : 'Fetch Reviews'}
             </button>
           )}
           <button
@@ -308,7 +308,7 @@ export default function AutoReplyPage() {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <MessageSquareReply className="h-10 w-10 text-gray-300" />
               <p className="mt-3 text-sm font-medium text-gray-500">No reviews found</p>
-              <p className="text-xs text-gray-400">Add a manual review or sync from Google</p>
+              <p className="text-xs text-gray-400">Add a manual review or fetch from Google</p>
             </div>
           ) : (
             filtered.map((review) => (
