@@ -10,6 +10,7 @@ import {
   Unplug,
   Check,
   Play,
+  Clock,
 } from 'lucide-react';
 
 type SettingsState = {
@@ -77,6 +78,7 @@ export function AutoReplySettings({ googleStatus, onConnectGoogle, onDisconnectG
   const [savedKey, setSavedKey] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [runResult, setRunResult] = useState<string | null>(null);
+  const [lastRun, setLastRun] = useState<{ last_run: string | null; last_result: string | null }>({ last_run: null, last_result: null });
 
   const load = async () => {
     try {
@@ -89,8 +91,16 @@ export function AutoReplySettings({ googleStatus, onConnectGoogle, onDisconnectG
     }
   };
 
+  const loadLastRun = async () => {
+    try {
+      const res = await fetch('/api/admin/auto-reply/last-run');
+      if (res.ok) setLastRun(await res.json());
+    } catch { /* ignore */ }
+  };
+
   useEffect(() => {
     void load();
+    void loadLastRun();
   }, []);
 
   const saveOne = async (key: string, value: string) => {
@@ -143,6 +153,7 @@ export function AutoReplySettings({ googleStatus, onConnectGoogle, onDisconnectG
                   setRunResult('Network error');
                 } finally {
                   setRunning(false);
+                  void loadLastRun();
                 }
               }}
               className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
@@ -158,6 +169,15 @@ export function AutoReplySettings({ googleStatus, onConnectGoogle, onDisconnectG
             <p className={`mt-2 text-xs ${runResult.startsWith('Done') ? 'text-green-700' : 'text-red-600'}`}>
               {runResult}
             </p>
+          )}
+          {lastRun.last_run && (
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-blue-700">
+              <Clock className="h-3 w-3" />
+              <span>
+                Last run: {new Date(lastRun.last_run).toLocaleString()}
+                {lastRun.last_result && ` — ${lastRun.last_result}`}
+              </span>
+            </div>
           )}
         </div>
       )}
