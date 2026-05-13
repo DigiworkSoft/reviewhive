@@ -38,6 +38,8 @@ yarn-error.log*
 
 # debug scripts
 seed.ts
+pros_cons.md
+PROJECT_GUIDELINES.md
 check-admins*.ts
 find-db.ts
 inspect-users.ts

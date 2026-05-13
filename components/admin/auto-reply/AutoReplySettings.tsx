@@ -9,6 +9,7 @@ import {
   Plug,
   Unplug,
   Check,
+  Play,
 } from 'lucide-react';
 
 type SettingsState = {
@@ -74,6 +75,8 @@ export function AutoReplySettings({ googleStatus, onConnectGoogle, onDisconnectG
   const [settings, setSettings] = useState<SettingsState>(defaults);
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [savedKey, setSavedKey] = useState<string | null>(null);
+  const [running, setRunning] = useState(false);
+  const [runResult, setRunResult] = useState<string | null>(null);
 
   const load = async () => {
     try {
@@ -115,6 +118,50 @@ export function AutoReplySettings({ googleStatus, onConnectGoogle, onDisconnectG
 
   return (
     <div className="space-y-4">
+      {/* Run Now */}
+      {googleStatus.connected && settings.autoreply_enabled === 'true' && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-blue-800">Run Auto-Reply Now</h3>
+              <p className="text-xs text-blue-600">Sync reviews from Google, generate AI replies, and post them — all in one go</p>
+            </div>
+            <button
+              disabled={running}
+              onClick={async () => {
+                setRunning(true);
+                setRunResult(null);
+                try {
+                  const res = await fetch('/api/admin/auto-reply/run', { method: 'POST' });
+                  const data = await res.json();
+                  if (res.ok && data.success) {
+                    setRunResult(`Done: ${data.synced} synced, ${data.generated} generated, ${data.posted} posted to Google`);
+                  } else {
+                    setRunResult(data.error || 'Failed');
+                  }
+                } catch {
+                  setRunResult('Network error');
+                } finally {
+                  setRunning(false);
+                }
+              }}
+              className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {running ? (
+                <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Running...</>
+              ) : (
+                <><Play className="h-3.5 w-3.5" /> Run Now</>
+              )}
+            </button>
+          </div>
+          {runResult && (
+            <p className={`mt-2 text-xs ${runResult.startsWith('Done') ? 'text-green-700' : 'text-red-600'}`}>
+              {runResult}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Enabled Toggle */}
       <div className="rounded-xl border bg-white p-4">
         <div className="flex items-center justify-between">
