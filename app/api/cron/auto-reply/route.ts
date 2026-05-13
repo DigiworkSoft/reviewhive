@@ -19,16 +19,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ skipped: true, reason: 'Auto-reply is disabled' });
     }
 
-    // Check interval — skip if not enough time has passed
-    const interval = parseInt(config.autoreply_cron_interval || '60') * 60 * 1000;
-    const lastRun = config.autoreply_last_cron_run
-      ? new Date(config.autoreply_last_cron_run).getTime()
-      : 0;
-
-    if (Date.now() - lastRun < interval) {
-      return NextResponse.json({ skipped: true, reason: 'Too soon since last run' });
-    }
-
     const result = await runAutoReply(config);
     return NextResponse.json(result);
   } catch (error) {

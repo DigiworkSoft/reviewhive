@@ -46,10 +46,13 @@ export async function POST() {
     let imported = 0;
     let updated = 0;
     let skipped = 0;
+    let stopSync = false;
 
     do {
       const data = await fetchReviews(valid.access_token, fullLocationPath, 50, pageToken);
       pageToken = data.nextPageToken;
+
+      let unchangedInPage = 0;
 
       for (const review of data.reviews) {
         const reviewDate = new Date(review.createTime);
@@ -65,10 +68,19 @@ export async function POST() {
         const initialStatus = hasReply ? 'posted' : 'pending';
 
         const existing = await sql`
-          SELECT id FROM google_reviews WHERE google_review_id = ${review.reviewId}
+          SELECT id, review_update_time FROM google_reviews WHERE google_review_id = ${review.reviewId}
         `;
 
         if (existing.length > 0) {
+          // Skip update if nothing changed (same updateTime from Google)
+          const storedUpdateTime = existing[0].review_update_time
+            ? new Date(existing[0].review_update_time).toISOString()
+            : null;
+          if (storedUpdateTime && storedUpdateTime === new Date(review.updateTime).toISOString()) {
+            unchangedInPage++;
+            continue;
+          }
+
           await sql`
             UPDATE google_reviews SET
               reviewer_name = ${review.reviewer?.displayName || 'Anonymous'},
@@ -76,6 +88,7 @@ export async function POST() {
               review_text = ${review.comment || ''},
               star_rating = ${rating},
               review_date = ${review.createTime},
+              review_update_time = ${review.updateTime},
               has_existing_reply = ${hasReply},
               reply_status = ${initialStatus},
               updated_at = NOW()
@@ -99,7 +112,8 @@ export async function POST() {
           const inserted = await sql`
             INSERT INTO google_reviews (
               google_review_id, google_review_name, reviewer_name, reviewer_photo_url,
-              review_text, star_rating, review_date, has_existing_reply, reply_status
+              review_text, star_rating, review_date, review_update_time,
+              has_existing_reply, reply_status
             ) VALUES (
               ${review.reviewId},
               ${`${fullLocationPath}/reviews/${review.reviewId}`},
@@ -108,6 +122,7 @@ export async function POST() {
               ${review.comment || ''},
               ${rating},
               ${review.createTime},
+              ${review.updateTime},
               ${hasReply},
               ${initialStatus}
             ) RETURNING id
@@ -122,7 +137,12 @@ export async function POST() {
           imported++;
         }
       }
-    } while (pageToken);
+
+      // Early-stop: if entire page was unchanged, older pages won't have changes either
+      if (data.reviews.length > 0 && unchangedInPage === data.reviews.length) {
+        stopSync = true;
+      }
+    } while (pageToken && !stopSync);
 
     return NextResponse.json({
       success: true, imported, updated, skipped,

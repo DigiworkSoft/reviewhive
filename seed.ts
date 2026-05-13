@@ -143,6 +143,7 @@ async function seed() {
         star_rating SMALLINT NOT NULL CHECK (star_rating BETWEEN 1 AND 5),
         review_text TEXT,
         review_date TIMESTAMPTZ DEFAULT NOW(),
+        review_update_time TIMESTAMPTZ,
         has_existing_reply BOOLEAN DEFAULT false,
         reply_status VARCHAR(20) DEFAULT 'pending',
         created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -162,6 +163,11 @@ async function seed() {
         posted_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
+    `;
+
+    // ── Migrations (safe to re-run) ──────────────────────────────────────
+    await sql`
+      ALTER TABLE google_reviews ADD COLUMN IF NOT EXISTS review_update_time TIMESTAMPTZ
     `;
 
     console.log('✅ Tables created.');

@@ -17,20 +17,14 @@ type SettingsState = {
   autoreply_enabled: string;
   autoreply_star_threshold: string;
   autoreply_tone: string;
-  autoreply_delay_min: string;
-  autoreply_delay_max: string;
   autoreply_sync_from_date: string;
-  autoreply_cron_interval: string;
 };
 
 const defaults: SettingsState = {
   autoreply_enabled: 'true',
   autoreply_star_threshold: '1',
   autoreply_tone: 'professional',
-  autoreply_delay_min: '0',
-  autoreply_delay_max: '5',
   autoreply_sync_from_date: '',
-  autoreply_cron_interval: '60',
 };
 
 const toneOptions = [
@@ -255,81 +249,6 @@ export function AutoReplySettings({ googleStatus, onConnectGoogle, onDisconnectG
             saving={savingKey === 'autoreply_tone'}
             saved={savedKey === 'autoreply_tone'}
             onClick={() => saveOne('autoreply_tone', settings.autoreply_tone)}
-          />
-        </div>
-      </div>
-
-      {/* Delay */}
-      <div className="rounded-xl border bg-white p-4">
-        <h3 className="text-sm font-semibold text-gray-700">Reply Delay</h3>
-        <p className="text-xs text-gray-400">Random delay range before auto-reply (minutes)</p>
-        <div className="mt-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min={0}
-              max={1440}
-              value={settings.autoreply_delay_min}
-              onChange={(e) => setSettings((s) => ({ ...s, autoreply_delay_min: e.target.value }))}
-              className="w-16 rounded-lg border px-2 py-1.5 text-center text-sm"
-            />
-            <span className="text-xs text-gray-500">min</span>
-            <span className="text-gray-400">—</span>
-            <input
-              type="number"
-              min={0}
-              max={1440}
-              value={settings.autoreply_delay_max}
-              onChange={(e) => setSettings((s) => ({ ...s, autoreply_delay_max: e.target.value }))}
-              className="w-16 rounded-lg border px-2 py-1.5 text-center text-sm"
-            />
-            <span className="text-xs text-gray-500">max</span>
-          </div>
-          <SaveBtn
-            saving={savingKey === 'autoreply_delay'}
-            saved={savedKey === 'autoreply_delay'}
-            onClick={async () => {
-              setSavingKey('autoreply_delay');
-              setSavedKey(null);
-              try {
-                for (const k of ['autoreply_delay_min', 'autoreply_delay_max'] as const) {
-                  const res = await fetch('/api/admin/config', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key: k, value: settings[k] }),
-                  });
-                  if (!res.ok) { alert('Failed to save delay'); return; }
-                }
-                setSavedKey('autoreply_delay');
-                setTimeout(() => setSavedKey(null), 2000);
-              } finally { setSavingKey(null); }
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Cron Frequency */}
-      <div className="rounded-xl border bg-white p-4">
-        <h3 className="text-sm font-semibold text-gray-700">Auto-Reply Frequency</h3>
-        <p className="text-xs text-gray-400">How often to check for new reviews and post replies</p>
-        <div className="mt-3 flex items-center justify-between">
-          <select
-            value={settings.autoreply_cron_interval}
-            onChange={(e) => setSettings((s) => ({ ...s, autoreply_cron_interval: e.target.value }))}
-            className="rounded-lg border px-3 py-1.5 text-sm text-gray-700"
-          >
-            <option value="15">Every 15 minutes</option>
-            <option value="30">Every 30 minutes</option>
-            <option value="60">Every 1 hour</option>
-            <option value="120">Every 2 hours</option>
-            <option value="360">Every 6 hours</option>
-            <option value="720">Every 12 hours</option>
-            <option value="1440">Once a day</option>
-          </select>
-          <SaveBtn
-            saving={savingKey === 'autoreply_cron_interval'}
-            saved={savedKey === 'autoreply_cron_interval'}
-            onClick={() => saveOne('autoreply_cron_interval', settings.autoreply_cron_interval)}
           />
         </div>
       </div>

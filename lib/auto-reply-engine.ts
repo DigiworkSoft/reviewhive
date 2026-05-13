@@ -13,8 +13,7 @@ export async function loadAutoReplyConfig(): Promise<ConfigMap> {
     SELECT key, value FROM system_config
     WHERE key IN (
       'autoreply_enabled', 'autoreply_star_threshold', 'autoreply_tone',
-      'autoreply_sync_from_date', 'autoreply_cron_interval',
-      'autoreply_last_cron_run', 'academy_name'
+      'autoreply_sync_from_date', 'autoreply_last_cron_run', 'academy_name'
     )
   `;
   return Object.fromEntries(rows.map((r) => [r.key, r.value]));
@@ -79,10 +78,13 @@ export async function runAutoReply(config: ConfigMap): Promise<AutoReplyResult> 
 
   let pageToken: string | undefined;
   let synced = 0;
+  let stopSync = false;
 
   do {
     const data = await fetchReviews(valid.access_token, fullLocationPath, 50, pageToken);
     pageToken = data.nextPageToken;
+
+    let unchangedInPage = 0;
 
     for (const review of data.reviews) {
       const reviewDate = new Date(review.createTime);
@@ -93,10 +95,19 @@ export async function runAutoReply(config: ConfigMap): Promise<AutoReplyResult> 
       const initialStatus = hasReply ? 'posted' : 'pending';
 
       const existing = await sql`
-        SELECT id FROM google_reviews WHERE google_review_id = ${review.reviewId}
+        SELECT id, review_update_time FROM google_reviews WHERE google_review_id = ${review.reviewId}
       `;
 
       if (existing.length > 0) {
+        // Skip update if nothing changed (same updateTime from Google)
+        const storedUpdateTime = existing[0].review_update_time
+          ? new Date(existing[0].review_update_time).toISOString()
+          : null;
+        if (storedUpdateTime && storedUpdateTime === new Date(review.updateTime).toISOString()) {
+          unchangedInPage++;
+          continue;
+        }
+
         await sql`
           UPDATE google_reviews SET
             reviewer_name = ${review.reviewer?.displayName || 'Anonymous'},
@@ -104,6 +115,7 @@ export async function runAutoReply(config: ConfigMap): Promise<AutoReplyResult> 
             review_text = ${review.comment || ''},
             star_rating = ${rating},
             review_date = ${review.createTime},
+            review_update_time = ${review.updateTime},
             has_existing_reply = ${hasReply},
             reply_status = ${initialStatus},
             updated_at = NOW()
@@ -125,7 +137,8 @@ export async function runAutoReply(config: ConfigMap): Promise<AutoReplyResult> 
         const inserted = await sql`
           INSERT INTO google_reviews (
             google_review_id, google_review_name, reviewer_name, reviewer_photo_url,
-            review_text, star_rating, review_date, has_existing_reply, reply_status
+            review_text, star_rating, review_date, review_update_time,
+            has_existing_reply, reply_status
           ) VALUES (
             ${review.reviewId},
             ${`${fullLocationPath}/reviews/${review.reviewId}`},
@@ -134,6 +147,7 @@ export async function runAutoReply(config: ConfigMap): Promise<AutoReplyResult> 
             ${review.comment || ''},
             ${rating},
             ${review.createTime},
+            ${review.updateTime},
             ${hasReply},
             ${initialStatus}
           ) RETURNING id
@@ -147,7 +161,12 @@ export async function runAutoReply(config: ConfigMap): Promise<AutoReplyResult> 
         synced++;
       }
     }
-  } while (pageToken);
+
+    // Early-stop: if entire page was unchanged, older pages won't have changes either
+    if (data.reviews.length > 0 && unchangedInPage === data.reviews.length) {
+      stopSync = true;
+    }
+  } while (pageToken && !stopSync);
 
   // ── Step 2: Generate AI replies for pending reviews ─────────────────
   const starThreshold = parseInt(config.autoreply_star_threshold || '1');
