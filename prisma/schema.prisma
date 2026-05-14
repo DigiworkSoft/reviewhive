@@ -1,0 +1,208 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── 1. Admin Users ────────────────────────────────────────
+
+model AdminUser {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email            String    @unique @db.VarChar(255)
+  passwordHash     String    @map("password_hash") @db.VarChar(255)
+  createdAt        DateTime? @default(now()) @map("created_at") @db.Timestamptz
+  lastLoginAt      DateTime? @map("last_login_at") @db.Timestamptz
+  refreshTokenHash String?   @map("refresh_token_hash") @db.VarChar(255)
+
+  // Relations
+  configsUpdated     SystemConfig[]     @relation("ConfigUpdatedBy")
+  auditLogsChanged   ConfigAuditLog[]   @relation("AuditChangedBy")
+  repliesApproved    ReviewReply[]      @relation("ReplyApprovedBy")
+  passwordResetTokens PasswordResetToken[]
+
+  @@map("admin_users")
+}
+
+// ─── 2. System Config ──────────────────────────────────────
+
+model SystemConfig {
+  key       String    @id @db.VarChar(100)
+  value     String
+  updatedAt DateTime? @default(now()) @map("updated_at") @db.Timestamptz
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  // Relations
+  updatedByUser AdminUser?       @relation("ConfigUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  auditLogs     ConfigAuditLog[]
+
+  @@map("system_config")
+}
+
+// ─── 3. Config Audit Log ───────────────────────────────────
+
+model ConfigAuditLog {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  configKey String?   @map("config_key") @db.VarChar(100)
+  oldValue  String?   @map("old_value")
+  newValue  String?   @map("new_value")
+  changedBy String?   @map("changed_by") @db.Uuid
+  changedAt DateTime? @default(now()) @map("changed_at") @db.Timestamptz
+
+  // Relations
+  config       SystemConfig? @relation(fields: [configKey], references: [key])
+  changedByUser AdminUser?   @relation("AuditChangedBy", fields: [changedBy], references: [id], onDelete: SetNull)
+
+  @@map("config_audit_log")
+}
+
+// ─── 4. Course Tags ────────────────────────────────────────
+
+model CourseTag {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String    @unique @db.VarChar(100)
+  description  String?
+  courseType   String?   @default("other") @map("course_type") @db.VarChar(50)
+  facultyNames String?   @map("faculty_names") @db.VarChar(255)
+  aliases      String[]  @default([])
+  displayOrder Int       @default(0) @map("display_order")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime? @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime? @default(now()) @map("updated_at") @db.Timestamptz
+
+  // Relations
+  fallbackTemplates FallbackTemplate[]
+  reviewEvents      ReviewEvent[]
+
+  @@map("course_tags")
+}
+
+// ─── 5. Fallback Templates ─────────────────────────────────
+
+model FallbackTemplate {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseTagId   String?   @map("course_tag_id") @db.Uuid
+  starRating   Int       @map("star_rating") @db.SmallInt
+  optionNumber Int       @map("option_number") @db.SmallInt
+  userStatus   String?   @map("user_status") @db.VarChar(20)
+  templateText String    @map("template_text")
+  isActive     Boolean   @default(true) @map("is_active")
+  weight       Int       @default(1) @db.SmallInt
+  tags         String[]  @default([])
+  reviewerType String?   @map("reviewer_type") @db.VarChar(20)
+  usageCount   Int       @default(0) @map("usage_count")
+  lastUsedAt   DateTime? @map("last_used_at") @db.Timestamptz
+  category     String?   @db.VarChar(50)
+
+  // Relations
+  courseTag CourseTag? @relation(fields: [courseTagId], references: [id], onDelete: Cascade)
+
+  @@unique([courseTagId, starRating, optionNumber, userStatus])
+  @@map("fallback_templates")
+}
+
+// ─── 6. Password Reset Tokens ──────────────────────────────
+
+model PasswordResetToken {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  adminId   String    @map("admin_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz
+  used      Boolean   @default(false)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  admin AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+// ─── 7. Review Events ──────────────────────────────────────
+
+model ReviewEvent {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventType            String    @map("event_type") @db.VarChar(50)
+  sessionId            String    @map("session_id") @db.Uuid
+  ipHash               String?   @map("ip_hash") @db.VarChar(64)
+  userAgentCategory    String?   @map("user_agent_category") @db.VarChar(20)
+  courseTagId           String?   @map("course_tag_id") @db.Uuid
+  starRating           Int?      @map("star_rating")
+  userStatus           String?   @map("user_status") @db.VarChar(20)
+  reviewerType         String?   @map("reviewer_type") @db.VarChar(20)
+  aiUsed               Boolean?  @map("ai_used")
+  optionNumberSelected Int?      @map("option_number_selected")
+  source               String?   @default("direct") @db.VarChar(50)
+  generatedText        String?   @map("generated_text")
+  createdAt            DateTime? @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  courseTag CourseTag? @relation(fields: [courseTagId], references: [id], onDelete: SetNull)
+
+  @@map("review_events")
+}
+
+// ─── 8. Google Tokens ──────────────────────────────────────
+
+model GoogleToken {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accessToken   String    @map("access_token")
+  refreshToken  String    @map("refresh_token")
+  expiresAt     BigInt    @map("expires_at")
+  accountName   String?   @map("account_name") @db.VarChar(255)
+  locationName  String?   @map("location_name") @db.VarChar(255)
+  locationTitle String?   @map("location_title") @db.VarChar(255)
+  connectedAt   DateTime? @default(now()) @map("connected_at") @db.Timestamptz
+  updatedAt     DateTime? @default(now()) @map("updated_at") @db.Timestamptz
+
+  @@map("google_tokens")
+}
+
+// ─── 9. Google Reviews ─────────────────────────────────────
+
+model GoogleReview {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  googleReviewId   String?   @unique @map("google_review_id") @db.VarChar(255)
+  googleReviewName String?   @map("google_review_name") @db.VarChar(500)
+  reviewerName     String    @map("reviewer_name") @db.VarChar(255)
+  reviewerPhotoUrl String?   @map("reviewer_photo_url")
+  starRating       Int       @map("star_rating") @db.SmallInt
+  reviewText       String?   @map("review_text")
+  reviewDate       DateTime? @default(now()) @map("review_date") @db.Timestamptz
+  reviewUpdateTime DateTime? @map("review_update_time") @db.Timestamptz
+  hasExistingReply Boolean   @default(false) @map("has_existing_reply")
+  replyStatus      String    @default("pending") @map("reply_status") @db.VarChar(20)
+  createdAt        DateTime? @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime? @default(now()) @map("updated_at") @db.Timestamptz
+
+  // Relations
+  replies ReviewReply[]
+
+  @@map("google_reviews")
+}
+
+// ─── 10. Review Replies ────────────────────────────────────
+
+model ReviewReply {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  googleReviewId String    @map("google_review_id") @db.Uuid
+  replyText      String    @map("reply_text")
+  status         String    @default("draft") @db.VarChar(20)
+  isAuto         Boolean   @default(false) @map("is_auto")
+  approvedBy     String?   @map("approved_by") @db.Uuid
+  approvedAt     DateTime? @map("approved_at") @db.Timestamptz
+  postedAt       DateTime? @map("posted_at") @db.Timestamptz
+  createdAt      DateTime? @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  googleReview   GoogleReview @relation(fields: [googleReviewId], references: [id], onDelete: Cascade)
+  approvedByUser AdminUser?   @relation("ReplyApprovedBy", fields: [approvedBy], references: [id], onDelete: SetNull)
+
+  @@map("review_replies")
+}

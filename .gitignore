@@ -30,8 +30,13 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+!.env.example
 
 # vercel
 .vercel
@@ -56,3 +61,5 @@ GROWHIVE_PRODUCT.pdf
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/lib/generated/prisma
