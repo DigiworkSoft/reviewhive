@@ -168,7 +168,7 @@ export function AutoReplySettings({ googleStatus, onConnectGoogle, onDisconnectG
             <div className="mt-2 flex items-center gap-1.5 text-xs text-blue-700">
               <Clock className="h-3 w-3" />
               <span>
-                Last run: {new Date(lastRun.last_run).toLocaleString()}
+                Last run: {new Date(lastRun.last_run).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                 {lastRun.last_result && ` — ${lastRun.last_result}`}
               </span>
             </div>
